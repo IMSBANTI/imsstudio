@@ -97,7 +97,7 @@ export function Navbar({ onOpenSyncModal, onOpenNewBrief, onOpenNewProject, onOp
             <div className="flex flex-col cursor-pointer" onClick={() => setActiveTab('dashboard')}>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-lg tracking-tight dark:text-white text-slate-900">
-                  IMS <span className="text-[#E5252A] font-serif italic">Studio</span>
+                  IMS <span className="text-[#E5252A]">Studio</span>
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded dark:bg-[#E5252A]/20 bg-[#E5252A]/10 text-[#E5252A]">
                   Experiential

@@ -114,7 +114,7 @@ export function LoginView() {
           </div>
           <div>
             <div className="font-extrabold text-lg tracking-tight dark:text-white text-slate-900 leading-none">
-              IMS <span className="text-[#E5252A] font-serif italic">Studio</span>
+              IMS <span className="text-[#E5252A]">Studio</span>
             </div>
             <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               Experiential Work Management
