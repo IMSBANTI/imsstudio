@@ -9,24 +9,13 @@ export function StudioProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Authenticated User State
+  // Authenticated User State (defaults to null: requires login)
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('ims_studio_current_user');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
     }
-    // Default to admin for seamless first open, but user can log out to test login flow
-    return {
-      id: "mem-admin",
-      name: "IMS Studio Director",
-      email: "admin@ims-studio.com",
-      roleType: "admin",
-      roleTitle: "Executive Studio Director & Admin",
-      departmentName: "Executive Management",
-      avatar: "/ims-logo.png",
-      isAdmin: true,
-      isManager: true
-    };
+    return null;
   });
 
   // Day / Dark mode theme state
