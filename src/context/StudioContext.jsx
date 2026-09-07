@@ -60,8 +60,10 @@ export function StudioProvider({ children }) {
     const root = document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
+      document.body.classList.add('dark');
     } else {
       root.classList.remove('dark');
+      document.body.classList.remove('dark');
     }
   }, [theme]);
 
@@ -120,7 +122,19 @@ export function StudioProvider({ children }) {
   }, [currentUser?.id]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('ims_studio_theme', next);
+      const root = document.documentElement;
+      if (next === 'dark') {
+        root.classList.add('dark');
+        document.body.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+        document.body.classList.remove('dark');
+      }
+      return next;
+    });
   };
 
   // --- Auth Methods ---
