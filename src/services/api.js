@@ -30,6 +30,16 @@ export const api = {
     return res.json();
   },
 
+  async clearSampleMembers() {
+    const res = await fetch(`${API_BASE}/data/clear-sample-members`, { method: 'POST' });
+    return res.json();
+  },
+
+  async clearAllSampleData() {
+    const res = await fetch(`${API_BASE}/data/clear-all-sample-data`, { method: 'POST' });
+    return res.json();
+  },
+
   // Auth
   async login(email, password) {
     const res = await fetch(`${API_BASE}/auth/login`, {

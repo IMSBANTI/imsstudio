@@ -1,11 +1,25 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import { initialData } from '../../server/data/initial_data';
 
 const StudioContext = createContext();
 
 export function StudioProvider({ children }) {
-  const [data, setData] = useState(initialData);
+  // Synchronously initialize from localStorage to prevent overwriting with initialData on mount
+  const [data, setData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ims_studio_persisted_data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.members && parsed.members.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return initialData;
+  });
+
+  const isInitialMount = useRef(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -92,7 +106,7 @@ export function StudioProvider({ children }) {
     return () => clearInterval(interval);
   }, [timerState.isRunning]);
 
-  // Fetch full data & user notifications with auto-restore of custom data
+  // Fetch full data & user notifications with resilient auto-restore
   const refreshData = async () => {
     try {
       setLoading(true);
@@ -105,11 +119,13 @@ export function StudioProvider({ children }) {
             const savedData = JSON.parse(savedRaw);
             const localHasCustomMembers = (savedData.members || []).some(m => !/^mem-\d{1,2}$/.test(m.id) && m.roleType !== 'admin');
             const localRemovedSeeded = (savedData.members || []).length < (initialData.members || []).length;
+            const localCleanState = savedData.isProductionClean || savedData.isSampleCleared;
             const serverHasOnlyDefaultSeed = (res.members || []).length === (initialData.members || []).length &&
-              !(res.members || []).some(m => !/^mem-\d{1,2}$/.test(m.id) && m.roleType !== 'admin');
+              !(res.members || []).some(m => !/^mem-\d{1,2}$/.test(m.id) && m.roleType !== 'admin') &&
+              !res.isProductionClean;
 
-            if ((localHasCustomMembers || localRemovedSeeded) && serverHasOnlyDefaultSeed) {
-              console.log('[IMS Studio] Restoring persisted user data to server after cloud container restart...');
+            if ((localHasCustomMembers || localRemovedSeeded || localCleanState) && serverHasOnlyDefaultSeed) {
+              console.log('[IMS Studio] Cloud container restarted. Auto-syncing custom user data back to cloud server...');
               await api.importDatabase(savedData);
               setData(savedData);
               if (currentUser?.id) {
@@ -153,8 +169,12 @@ export function StudioProvider({ children }) {
     }
   };
 
-  // Automatically persist local copy in browser localStorage
+  // Automatically persist local copy in browser localStorage ONLY after initial mount
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     if (data && data.members && data.members.length > 0) {
       localStorage.setItem('ims_studio_persisted_data', JSON.stringify(data));
     }
@@ -604,20 +624,22 @@ export function StudioProvider({ children }) {
       showToast('Permission Denied: Only Admins can clear sample members', 'error');
       return;
     }
-    // Keep Admin and any user-created custom members (which use mem-timestamp id)
-    const customOrAdminMembers = data.members.filter(m => m.roleType === 'admin' || !/^mem-\d{1,2}$/.test(m.id));
-    const countRemoved = data.members.length - customOrAdminMembers.length;
-    const updatedData = { ...data, members: customOrAdminMembers };
     try {
-      await api.importDatabase(updatedData);
-      setData(updatedData);
-      localStorage.setItem('ims_studio_persisted_data', JSON.stringify(updatedData));
-      showToast(`Removed ${countRemoved} sample team members. Admin and custom members preserved!`, 'success');
+      const res = await api.clearSampleMembers();
+      if (res && res.db) {
+        setData(res.db);
+        localStorage.setItem('ims_studio_persisted_data', JSON.stringify(res.db));
+        showToast('Sample demo team members removed successfully!', 'success');
+        return;
+      }
     } catch (e) {
-      setData(updatedData);
-      localStorage.setItem('ims_studio_persisted_data', JSON.stringify(updatedData));
-      showToast('Sample members removed locally', 'info');
+      console.warn('API call failed, clearing locally:', e);
     }
+    const customOrAdminMembers = data.members.filter(m => m.roleType === 'admin' || !/^mem-\d{1,2}$/.test(m.id));
+    const updatedData = { ...data, members: customOrAdminMembers, isSampleCleared: true };
+    setData(updatedData);
+    localStorage.setItem('ims_studio_persisted_data', JSON.stringify(updatedData));
+    showToast('Sample team members removed. Admin and custom members preserved!', 'success');
   };
 
   const clearAllSampleData = async () => {
@@ -625,7 +647,17 @@ export function StudioProvider({ children }) {
       showToast('Permission Denied: Only Admins can clear sample data', 'error');
       return;
     }
-    // Remove sample briefs, projects, tasks, timelogs and sample members
+    try {
+      const res = await api.clearAllSampleData();
+      if (res && res.db) {
+        setData(res.db);
+        localStorage.setItem('ims_studio_persisted_data', JSON.stringify(res.db));
+        showToast('All sample data cleared! Production workspace ready.', 'success');
+        return;
+      }
+    } catch (e) {
+      console.warn('API call failed, clearing locally:', e);
+    }
     const cleanData = {
       ...data,
       briefs: [],
@@ -633,18 +665,13 @@ export function StudioProvider({ children }) {
       tasks: [],
       timelogs: [],
       notifications: [],
-      members: data.members.filter(m => m.roleType === 'admin' || !/^mem-\d{1,2}$/.test(m.id))
+      members: data.members.filter(m => m.roleType === 'admin' || !/^mem-\d{1,2}$/.test(m.id)),
+      isProductionClean: true,
+      isSampleCleared: true
     };
-    try {
-      await api.importDatabase(cleanData);
-      setData(cleanData);
-      localStorage.setItem('ims_studio_persisted_data', JSON.stringify(cleanData));
-      showToast('Cleared all sample data. Studio workspace is now completely clean!', 'success');
-    } catch (e) {
-      setData(cleanData);
-      localStorage.setItem('ims_studio_persisted_data', JSON.stringify(cleanData));
-      showToast('Cleaned records locally', 'info');
-    }
+    setData(cleanData);
+    localStorage.setItem('ims_studio_persisted_data', JSON.stringify(cleanData));
+    showToast('Cleared all sample data. Studio workspace is now completely clean!', 'success');
   };
 
   return (

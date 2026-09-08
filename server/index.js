@@ -3,8 +3,10 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import pg from 'pg';
 import { initialData } from './data/initial_data.js';
 
+const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.join(__dirname, 'data');
@@ -21,16 +23,31 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
+// PostgreSQL Persistent Pool (Activated when DATABASE_URL environment variable is provided)
+let pgPool = null;
+if (process.env.DATABASE_URL) {
+  try {
+    pgPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+    });
+    console.log('[IMS Studio] Persistent PostgreSQL configured via DATABASE_URL');
+  } catch (err) {
+    console.error('[IMS Studio] PostgreSQL init error:', err);
+    pgPool = null;
+  }
+}
+
 function loadDatabase() {
   try {
     if (fs.existsSync(DB_FILE)) {
       const content = fs.readFileSync(DB_FILE, 'utf-8');
       const parsed = JSON.parse(content);
       // Ensure notifications array exists
-      if (!parsed.notifications) parsed.notifications = initialData.notifications || [];
+      if (!parsed.notifications) parsed.notifications = [];
       // Ensure admin member exists
-      if (!parsed.members.find(m => m.roleType === 'admin')) {
-        parsed.members.unshift(initialData.members[0]);
+      if (!parsed.members || !parsed.members.find(m => m.roleType === 'admin')) {
+        parsed.members = [initialData.members[0], ...(parsed.members || [])];
       }
       return parsed;
     }
@@ -42,14 +59,48 @@ function loadDatabase() {
 }
 
 function saveDatabase(data) {
+  data.lastModified = Date.now();
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
   } catch (err) {
     console.error('Error saving DB file:', err);
   }
+
+  // If cloud PostgreSQL is configured, persist state permanently to the cloud
+  if (pgPool) {
+    pgPool.query(
+      `INSERT INTO studio_storage (key, payload, last_modified)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (key) DO UPDATE SET payload = $2, last_modified = $3`,
+      ['production_db', data, data.lastModified]
+    ).catch(err => console.error('[IMS Studio] Cloud PostgreSQL write error:', err));
+  }
 }
 
 let db = loadDatabase();
+
+// Asynchronously initialize PostgreSQL storage table & load cloud data if available
+async function initStorage() {
+  if (!pgPool) return;
+  try {
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS studio_storage (
+        key VARCHAR(64) PRIMARY KEY,
+        payload JSONB NOT NULL,
+        last_modified BIGINT NOT NULL
+      );
+    `);
+    const res = await pgPool.query('SELECT payload, last_modified FROM studio_storage WHERE key = $1', ['production_db']);
+    if (res.rows.length > 0 && res.rows[0].payload) {
+      db = res.rows[0].payload;
+      db.lastModified = Number(res.rows[0].last_modified);
+      console.log('[IMS Studio] Successfully loaded persistent state from Cloud PostgreSQL database');
+    }
+  } catch (err) {
+    console.error('[IMS Studio] PostgreSQL initStorage error:', err);
+  }
+}
+initStorage();
 
 // --- Health Check ---
 app.get('/api/health', (req, res) => {
@@ -219,6 +270,26 @@ app.post('/api/data/import', (req, res) => {
   if (!db.notifications) db.notifications = [];
   saveDatabase(db);
   res.json({ success: true, message: 'Database imported successfully', db });
+});
+
+app.post('/api/data/clear-sample-members', (req, res) => {
+  db.members = db.members.filter(m => m.roleType === 'admin' || !/^mem-\d{1,2}$/.test(m.id));
+  db.isSampleCleared = true;
+  saveDatabase(db);
+  res.json({ success: true, message: 'Sample demo team members removed successfully', db });
+});
+
+app.post('/api/data/clear-all-sample-data', (req, res) => {
+  db.briefs = [];
+  db.projects = [];
+  db.tasks = [];
+  db.timelogs = [];
+  db.notifications = [];
+  db.members = db.members.filter(m => m.roleType === 'admin' || !/^mem-\d{1,2}$/.test(m.id));
+  db.isSampleCleared = true;
+  db.isProductionClean = true;
+  saveDatabase(db);
+  res.json({ success: true, message: 'All sample demo data cleared! Production workspace ready.', db });
 });
 
 app.get('/api/data/export', (req, res) => {
