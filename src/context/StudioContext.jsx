@@ -92,13 +92,40 @@ export function StudioProvider({ children }) {
     return () => clearInterval(interval);
   }, [timerState.isRunning]);
 
-  // Fetch full data & user notifications
+  // Fetch full data & user notifications with auto-restore of custom data
   const refreshData = async () => {
     try {
       setLoading(true);
       const res = await api.getDatabase();
       if (res && res.projects) {
+        // Auto-heal if Render container was recreated / redeployed with pristine seed
+        const savedRaw = localStorage.getItem('ims_studio_persisted_data');
+        if (savedRaw) {
+          try {
+            const savedData = JSON.parse(savedRaw);
+            const localHasCustomMembers = (savedData.members || []).some(m => !/^mem-\d{1,2}$/.test(m.id) && m.roleType !== 'admin');
+            const localRemovedSeeded = (savedData.members || []).length < (initialData.members || []).length;
+            const serverHasOnlyDefaultSeed = (res.members || []).length === (initialData.members || []).length &&
+              !(res.members || []).some(m => !/^mem-\d{1,2}$/.test(m.id) && m.roleType !== 'admin');
+
+            if ((localHasCustomMembers || localRemovedSeeded) && serverHasOnlyDefaultSeed) {
+              console.log('[IMS Studio] Restoring persisted user data to server after cloud container restart...');
+              await api.importDatabase(savedData);
+              setData(savedData);
+              if (currentUser?.id) {
+                const notifs = await api.getNotifications(currentUser.id);
+                setNotifications(notifs);
+              }
+              setError(null);
+              return;
+            }
+          } catch (e) {
+            console.error('Error checking local backup:', e);
+          }
+        }
+
         setData(res);
+        localStorage.setItem('ims_studio_persisted_data', JSON.stringify(res));
       }
       if (currentUser?.id) {
         const notifs = await api.getNotifications(currentUser.id);
@@ -106,8 +133,17 @@ export function StudioProvider({ children }) {
       }
       setError(null);
     } catch (err) {
-      console.warn('Failed to load from server, using local seed fallback:', err);
-      setData(initialData);
+      console.warn('Failed to load from server, using local fallback:', err);
+      const savedRaw = localStorage.getItem('ims_studio_persisted_data');
+      if (savedRaw) {
+        try {
+          setData(JSON.parse(savedRaw));
+        } catch (e) {
+          setData(initialData);
+        }
+      } else {
+        setData(initialData);
+      }
       if (currentUser?.id) {
         const fallbackNotifs = (initialData.notifications || []).filter(n => n.recipientId === currentUser.id);
         setNotifications(fallbackNotifs);
@@ -116,6 +152,13 @@ export function StudioProvider({ children }) {
       setLoading(false);
     }
   };
+
+  // Automatically persist local copy in browser localStorage
+  useEffect(() => {
+    if (data && data.members && data.members.length > 0) {
+      localStorage.setItem('ims_studio_persisted_data', JSON.stringify(data));
+    }
+  }, [data]);
 
   useEffect(() => {
     refreshData();
@@ -556,6 +599,54 @@ export function StudioProvider({ children }) {
     }
   };
 
+  const clearSampleMembers = async () => {
+    if (!isAdmin) {
+      showToast('Permission Denied: Only Admins can clear sample members', 'error');
+      return;
+    }
+    // Keep Admin and any user-created custom members (which use mem-timestamp id)
+    const customOrAdminMembers = data.members.filter(m => m.roleType === 'admin' || !/^mem-\d{1,2}$/.test(m.id));
+    const countRemoved = data.members.length - customOrAdminMembers.length;
+    const updatedData = { ...data, members: customOrAdminMembers };
+    try {
+      await api.importDatabase(updatedData);
+      setData(updatedData);
+      localStorage.setItem('ims_studio_persisted_data', JSON.stringify(updatedData));
+      showToast(`Removed ${countRemoved} sample team members. Admin and custom members preserved!`, 'success');
+    } catch (e) {
+      setData(updatedData);
+      localStorage.setItem('ims_studio_persisted_data', JSON.stringify(updatedData));
+      showToast('Sample members removed locally', 'info');
+    }
+  };
+
+  const clearAllSampleData = async () => {
+    if (!isAdmin) {
+      showToast('Permission Denied: Only Admins can clear sample data', 'error');
+      return;
+    }
+    // Remove sample briefs, projects, tasks, timelogs and sample members
+    const cleanData = {
+      ...data,
+      briefs: [],
+      projects: [],
+      tasks: [],
+      timelogs: [],
+      notifications: [],
+      members: data.members.filter(m => m.roleType === 'admin' || !/^mem-\d{1,2}$/.test(m.id))
+    };
+    try {
+      await api.importDatabase(cleanData);
+      setData(cleanData);
+      localStorage.setItem('ims_studio_persisted_data', JSON.stringify(cleanData));
+      showToast('Cleared all sample data. Studio workspace is now completely clean!', 'success');
+    } catch (e) {
+      setData(cleanData);
+      localStorage.setItem('ims_studio_persisted_data', JSON.stringify(cleanData));
+      showToast('Cleaned records locally', 'info');
+    }
+  };
+
   return (
     <StudioContext.Provider
       value={{
@@ -608,6 +699,8 @@ export function StudioProvider({ children }) {
         addRole,
         updateRole,
         deleteRole,
+        clearSampleMembers,
+        clearAllSampleData,
         resetAllData,
         importData
       }}

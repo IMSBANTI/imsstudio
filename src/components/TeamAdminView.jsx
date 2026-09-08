@@ -19,12 +19,13 @@ import {
   Award,
   KeyRound,
   Lock,
-  Banknote
+  Banknote,
+  UserMinus
 } from 'lucide-react';
 import { EditRoleModal, EditMemberModal } from './Modals';
 
 export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, onOpenAdminResetPassword }) {
-  const { data, deleteMember, isAdmin, isManager, currentUser } = useStudio();
+  const { data, deleteMember, clearSampleMembers, isAdmin, isManager, currentUser } = useStudio();
   const [selectedDeptFilter, setSelectedDeptFilter] = useState('All');
   const [editingRole, setEditingRole] = useState(null);
   const [editingMember, setEditingMember] = useState(null);
@@ -52,6 +53,19 @@ export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, o
         {/* Action Buttons (Admin Only) */}
         {isAdmin ? (
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => {
+                if (confirm('Remove all 13 pre-seeded sample team members? Your Admin account and any custom members you created will be kept safe.')) {
+                  clearSampleMembers();
+                }
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 hover:border-rose-500 hover:text-rose-500 dark:text-slate-300 text-slate-700 text-xs font-bold transition-all shadow-sm cursor-pointer"
+              title="Remove all pre-seeded demo artists and keep only real studio members"
+            >
+              <UserMinus size={14} className="text-rose-500" />
+              Clear Sample Members
+            </button>
+
             <button
               onClick={onOpenNewDept}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 hover:border-[#E5252A] dark:text-slate-200 text-slate-700 text-xs font-bold transition-all shadow-sm cursor-pointer"
@@ -287,7 +301,11 @@ export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, o
                               </button>
                               <button
                                 type="button"
-                                onClick={() => deleteMember(member.id)}
+                                onClick={() => {
+                                  if (confirm(`Remove "${member.name}" from team roster?`)) {
+                                    deleteMember(member.id);
+                                  }
+                                }}
                                 className="text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer"
                                 title="Remove member"
                               >

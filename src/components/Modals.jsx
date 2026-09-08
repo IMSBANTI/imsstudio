@@ -1243,7 +1243,7 @@ export function NewRoleModal({ isOpen, onClose }) {
 
 // --- 9. Multi-Location Database Sync & Backup Modal ---
 export function DataSyncModal({ isOpen, onClose }) {
-  const { data, resetAllData, importData } = useStudio();
+  const { data, resetAllData, importData, clearSampleMembers, clearAllSampleData, isAdmin } = useStudio();
   const [importStatus, setImportStatus] = useState('');
 
   if (!isOpen) return null;
@@ -1367,9 +1367,53 @@ export function DataSyncModal({ isOpen, onClose }) {
             </div>
           )}
 
+          {/* Production Slate & Sample Data Removal */}
+          {isAdmin && (
+            <div className="p-4 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#21262d] border-slate-200 space-y-3">
+              <div>
+                <div className="font-bold text-xs dark:text-white text-slate-800">
+                  Sample / Demo Data Management
+                </div>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Clear out pre-seeded demo records to run your studio in clean production mode.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('Remove all pre-seeded demo team members? Your Admin account and custom members will be preserved.')) {
+                      clearSampleMembers();
+                      onClose();
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg border border-rose-500/40 text-rose-500 hover:bg-rose-500/10 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={13} />
+                  Clear Demo Members Only
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('Clear ALL sample briefs, projects, tasks, timelogs and demo members? This starts a 100% clean production studio workspace (Admin preserved).')) {
+                      clearAllSampleData();
+                      onClose();
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <RotateCcw size={13} />
+                  Start Fresh (Clear All Demo Data)
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Reset to Seed Data */}
-          <div className="pt-3 border-t dark:border-[#21262d] border-slate-100 flex items-center justify-between">
-            <span className="text-slate-400 text-[11px]">Need to reset to demo studio data?</span>
+          <div className="pt-2 border-t dark:border-[#21262d] border-slate-100 flex items-center justify-between">
+            <span className="text-slate-400 text-[11px]">Need to reset back to demo studio seed?</span>
             <button
               onClick={() => {
                 if (confirm('Reset studio database to initial experiential seed records?')) {
@@ -1377,7 +1421,7 @@ export function DataSyncModal({ isOpen, onClose }) {
                   onClose();
                 }
               }}
-              className="text-xs text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white hover:underline flex items-center gap-1 cursor-pointer"
             >
               <RotateCcw size={12} /> Reset to Demo Records
             </button>
