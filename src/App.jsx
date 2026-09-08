@@ -8,6 +8,7 @@ import { ProjectsView } from './components/ProjectsView';
 import { TasksView } from './components/TasksView';
 import { TimeTrackingView } from './components/TimeTrackingView';
 import { TeamAdminView } from './components/TeamAdminView';
+import { AdminCategoryView } from './components/AdminCategoryView';
 import { Toast } from './components/Toast';
 import { ChangePasswordModal, AdminResetPasswordModal } from './components/ChangePasswordModal';
 import {
@@ -107,6 +108,13 @@ function StudioApp() {
             onOpenNewDept={() => setIsNewDeptOpen(true)}
             onOpenNewRole={() => setIsNewRoleOpen(true)}
             onOpenAdminResetPassword={(member) => setAdminResetMember(member)}
+          />
+        )}
+
+        {activeTab === 'admin' && (
+          <AdminCategoryView
+            onOpenAdminResetPassword={(member) => setAdminResetMember(member)}
+            onOpenChangePassword={() => setIsChangePasswordOpen(true)}
           />
         )}
       </main>

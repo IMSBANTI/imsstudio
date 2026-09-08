@@ -28,7 +28,6 @@ import { EditRoleModal, EditMemberModal } from './Modals';
 export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, onOpenAdminResetPassword }) {
   const { data, deleteMember, clearSampleMembers, isAdmin, isManager, currentUser } = useStudio();
   const [selectedDeptFilter, setSelectedDeptFilter] = useState('All');
-  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [editingMember, setEditingMember] = useState(null);
 
@@ -56,44 +55,6 @@ export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, o
         {/* Action Buttons (Admin Only) */}
         {isAdmin ? (
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Admin Category Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setAdminMenuOpen(!adminMenuOpen)}
-                className="h-9 flex items-center gap-1.5 px-3.5 rounded-xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 hover:border-[#E5252A] dark:text-slate-200 text-slate-700 text-xs font-bold transition-all shadow-sm cursor-pointer"
-              >
-                <ShieldCheck size={14} className="text-[#E5252A]" />
-                <span>Admin Category</span>
-                <ChevronDown size={13} className="text-slate-400" />
-              </button>
-
-              {adminMenuOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-64 rounded-2xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-100"
-                  onClick={() => setAdminMenuOpen(false)}
-                >
-                  <div className="px-3.5 py-2 border-b dark:border-[#21262d] border-slate-100 mb-1">
-                    <div className="font-bold text-xs dark:text-white text-slate-900">Admin Category Actions</div>
-                    <div className="text-[10px] text-slate-400">Roster & system maintenance</div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (confirm('Remove all pre-seeded sample team members? Your Admin account and custom members will be kept safe.')) {
-                        clearSampleMembers();
-                      }
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-left text-xs text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
-                  >
-                    <UserMinus size={14} />
-                    <span>Clear Sample Members</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
             <button
               onClick={onOpenNewDept}
               className="h-9 flex items-center gap-1.5 px-3.5 rounded-xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 hover:border-[#E5252A] dark:text-slate-200 text-slate-700 text-xs font-bold transition-all shadow-sm cursor-pointer"
@@ -284,34 +245,6 @@ export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, o
             ))}
           </div>
         </div>
-
-        {/* Admin Category Maintenance Card */}
-        {selectedDeptFilter === 'admin' && isAdmin && (
-          <div className="p-4 rounded-2xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200">
-            <div className="space-y-0.5">
-              <div className="font-bold text-xs dark:text-white text-slate-900 flex items-center gap-1.5">
-                <ShieldCheck size={16} className="text-[#E5252A]" />
-                <span>Admin Category Maintenance</span>
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Remove demo visualizers & seeded staff to keep only real studio members and your Admin profile.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                if (confirm('Remove all pre-seeded sample team members? Your Admin account and custom members will be preserved.')) {
-                  clearSampleMembers();
-                }
-              }}
-              className="h-9 flex items-center gap-1.5 px-4 rounded-xl border border-rose-500/40 text-rose-500 hover:bg-rose-500/10 text-xs font-bold transition-all shadow-sm cursor-pointer whitespace-nowrap"
-              title="Remove pre-seeded demo artists"
-            >
-              <UserMinus size={14} />
-              <span>Clear Sample Members</span>
-            </button>
-          </div>
-        )}
 
         {/* Member Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

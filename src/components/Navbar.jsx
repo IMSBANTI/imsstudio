@@ -58,7 +58,8 @@ export function Navbar({ onOpenSyncModal, onOpenNewBrief, onOpenNewProject, onOp
     { id: 'projects', label: 'Studio Projects', icon: FolderKanban, badge: data.projects.filter(p => p.status === 'Ongoing').length },
     { id: 'tasks', label: 'Task Pipeline', icon: CheckSquare },
     { id: 'timetracking', label: 'Time & Timesheets', icon: Clock },
-    { id: 'team', label: 'Studio Structure', icon: Users }
+    { id: 'team', label: 'Studio Structure', icon: Users },
+    { id: 'admin', label: 'Admin Category', icon: ShieldCheck }
   ];
 
   const getRoleBadge = (roleType) => {
