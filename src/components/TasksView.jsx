@@ -16,7 +16,8 @@ import {
   MoreVertical,
   CheckCircle,
   UserCheck,
-  Lock
+  Lock,
+  Trash2
 } from 'lucide-react';
 
 export function TasksView({ onOpenNewTask }) {
@@ -266,6 +267,19 @@ export function TasksView({ onOpenNewTask }) {
                               <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 font-bold flex items-center gap-1">
                                 <RotateCcw size={10} /> Rev {task.revisionCount}
                               </span>
+                            )}
+                            {isManager && (
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Delete task "${task.title}"?`)) {
+                                    deleteTask(task.id);
+                                  }
+                                }}
+                                title="Delete Task"
+                                className="p-1 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer ml-1"
+                              >
+                                <Trash2 size={12} />
+                              </button>
                             )}
                           </div>
                         </div>

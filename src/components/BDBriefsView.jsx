@@ -19,7 +19,8 @@ import {
   Calendar,
   Layers,
   Building,
-  DollarSign
+  DollarSign,
+  Trash2
 } from 'lucide-react';
 
 export function BDBriefsView({ onOpenNewBrief, onOpenHandoverModal }) {
@@ -390,22 +391,35 @@ export function BDBriefsView({ onOpenNewBrief, onOpenHandoverModal }) {
                     <span className="text-slate-400 text-[11px]">No link attached</span>
                   )}
 
-                  {/* Handover or View Project Button */}
-                  {hasConvertedProject ? (
-                    <div className="flex items-center gap-1 text-emerald-500 font-bold">
-                      <CheckCircle size={14} />
-                      <span>{convertedProject?.code || 'In Studio'}</span>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => onOpenHandoverModal(brief)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#E5252A] hover:bg-[#c91d22] text-white font-bold transition-all text-xs cursor-pointer shadow-sm"
-                    >
-                      <Sparkles size={13} />
-                      <span>Handover to Studio</span>
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {/* Handover or View Project Button */}
+                    {hasConvertedProject ? (
+                      <div className="flex items-center gap-1 text-emerald-500 font-bold">
+                        <CheckCircle size={14} />
+                        <span>{convertedProject?.code || 'In Studio'}</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => onOpenHandoverModal(brief)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#E5252A] hover:bg-[#c91d22] text-white font-bold transition-all text-xs cursor-pointer shadow-sm"
+                      >
+                        <Sparkles size={13} />
+                        <span>Handover</span>
+                      </button>
+                    )}
 
+                    <button
+                      onClick={() => {
+                        if (confirm(`Delete brief "${brief.projectTitle}"?`)) {
+                          deleteBrief(brief.id);
+                        }
+                      }}
+                      title="Delete Brief"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );

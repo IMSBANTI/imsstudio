@@ -642,6 +642,36 @@ export function StudioProvider({ children }) {
     showToast('Sample team members removed. Admin and custom members preserved!', 'success');
   };
 
+  const clearSampleWork = async () => {
+    if (!isAdmin && !isManager) {
+      showToast('Permission Denied: Only Admins/Managers can clear sample work', 'error');
+      return;
+    }
+    try {
+      const res = await api.clearSampleWork();
+      if (res && res.db) {
+        setData(res.db);
+        localStorage.setItem('ims_studio_persisted_data', JSON.stringify(res.db));
+        showToast('All sample projects, briefs, tasks, and timelogs cleared!', 'success');
+        return;
+      }
+    } catch (e) {
+      console.warn('API call failed, clearing work locally:', e);
+    }
+    const cleanWorkData = {
+      ...data,
+      briefs: [],
+      projects: [],
+      tasks: [],
+      timelogs: [],
+      notifications: [],
+      isSampleWorkCleared: true
+    };
+    setData(cleanWorkData);
+    localStorage.setItem('ims_studio_persisted_data', JSON.stringify(cleanWorkData));
+    showToast('Sample work cleared. Team roster and departments preserved!', 'success');
+  };
+
   const clearAllSampleData = async () => {
     if (!isAdmin) {
       showToast('Permission Denied: Only Admins can clear sample data', 'error');
@@ -727,6 +757,7 @@ export function StudioProvider({ children }) {
         updateRole,
         deleteRole,
         clearSampleMembers,
+        clearSampleWork,
         clearAllSampleData,
         resetAllData,
         importData

@@ -35,6 +35,11 @@ export const api = {
     return res.json();
   },
 
+  async clearSampleWork() {
+    const res = await fetch(`${API_BASE}/data/clear-sample-work`, { method: 'POST' });
+    return res.json();
+  },
+
   async clearAllSampleData() {
     const res = await fetch(`${API_BASE}/data/clear-all-sample-data`, { method: 'POST' });
     return res.json();

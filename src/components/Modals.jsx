@@ -1243,7 +1243,7 @@ export function NewRoleModal({ isOpen, onClose }) {
 
 // --- 9. Multi-Location Database Sync & Backup Modal ---
 export function DataSyncModal({ isOpen, onClose }) {
-  const { data, resetAllData, importData, clearSampleMembers, clearAllSampleData, isAdmin } = useStudio();
+  const { data, resetAllData, importData, clearSampleMembers, clearAllSampleData, clearSampleWork, isAdmin } = useStudio();
   const [importStatus, setImportStatus] = useState('');
 
   if (!isOpen) return null;
@@ -1380,6 +1380,20 @@ export function DataSyncModal({ isOpen, onClose }) {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('Clear all sample briefs, projects, tasks, and timesheets? Your team roster and custom members will be preserved.')) {
+                      clearSampleWork();
+                      onClose();
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg border border-amber-500/40 text-amber-500 hover:bg-amber-500/10 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={13} />
+                  Clear Sample Work (Keep Team)
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {

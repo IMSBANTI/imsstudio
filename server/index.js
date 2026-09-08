@@ -279,6 +279,17 @@ app.post('/api/data/clear-sample-members', (req, res) => {
   res.json({ success: true, message: 'Sample demo team members removed successfully', db });
 });
 
+app.post('/api/data/clear-sample-work', (req, res) => {
+  db.briefs = [];
+  db.projects = [];
+  db.tasks = [];
+  db.timelogs = [];
+  db.notifications = [];
+  db.isSampleWorkCleared = true;
+  saveDatabase(db);
+  res.json({ success: true, message: 'All sample projects, briefs, tasks, and timelogs cleared. Team members preserved!', db });
+});
+
 app.post('/api/data/clear-all-sample-data', (req, res) => {
   db.briefs = [];
   db.projects = [];

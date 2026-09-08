@@ -19,11 +19,12 @@ import {
   Sparkles,
   LayoutGrid,
   List,
-  Banknote
+  Banknote,
+  Trash2
 } from 'lucide-react';
 
 export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
-  const { data, updateProject, deleteProject, setActiveTab, startTimer, isManager, isAdmin } = useStudio();
+  const { data, updateProject, deleteProject, clearSampleWork, setActiveTab, startTimer, isManager, isAdmin } = useStudio();
 
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
   const [searchQuery, setSearchQuery] = useState('');
@@ -111,6 +112,21 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
               <List size={16} />
             </button>
           </div>
+
+          {isAdmin && data.projects.length > 0 && (
+            <button
+              onClick={() => {
+                if (confirm('Clear all sample projects, tasks, briefs, and logged hours? Your team members and studio structure will be preserved.')) {
+                  clearSampleWork();
+                }
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 hover:border-rose-500 hover:text-rose-500 dark:text-slate-300 text-slate-700 text-xs font-bold transition-all shadow-sm cursor-pointer"
+              title="Clear all sample client projects and tasks"
+            >
+              <Trash2 size={14} className="text-rose-500" />
+              Clear Sample Work
+            </button>
+          )}
 
           {isManager && (
             <button
@@ -254,9 +270,26 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-mono text-[10px] font-bold text-[#E5252A]">{proj.code}</span>
-                            <span className="text-[10px] px-1.5 py-0.2 rounded font-semibold dark:bg-[#21262d] bg-slate-100 dark:text-slate-300 text-slate-600">
-                              {proj.department}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] px-1.5 py-0.2 rounded font-semibold dark:bg-[#21262d] bg-slate-100 dark:text-slate-300 text-slate-600">
+                                {proj.department}
+                              </span>
+                              {isAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (confirm(`Delete project "${proj.title}"?`)) {
+                                      deleteProject(proj.id);
+                                    }
+                                  }}
+                                  className="text-slate-400 hover:text-rose-500 transition-colors p-0.5 cursor-pointer"
+                                  title="Delete Project"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              )}
+                            </div>
                           </div>
 
                           <div>
@@ -423,13 +456,29 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
                         <div className="font-mono font-bold dark:text-slate-200 text-slate-800">{formatBDT(projDeliveredBDT)}</div>
                         <div className="text-[10px] text-slate-400">{pctValRealized}% realized</div>
                       </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <button
-                          onClick={() => setActiveTab('tasks')}
-                          className="text-[#E5252A] hover:underline font-bold text-xs cursor-pointer"
-                        >
-                          Tasks &rarr;
-                        </button>
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setActiveTab('tasks')}
+                            className="text-[#E5252A] hover:underline font-bold text-xs cursor-pointer"
+                          >
+                            Tasks &rarr;
+                          </button>
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`Delete project "${proj.title}"?`)) {
+                                  deleteProject(proj.id);
+                                }
+                              }}
+                              className="text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer"
+                              title="Delete Project"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
