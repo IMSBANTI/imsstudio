@@ -82,28 +82,28 @@ export function Navbar({ onOpenSyncModal, onOpenNewBrief, onOpenNewProject, onOp
         <div className="flex items-center justify-between h-16">
           
           {/* Logo & Brand Tagline */}
-          <div className="flex items-center gap-3">
-            <div className="relative group cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-              <div className="w-10 h-10 rounded-full border-2 border-[#E5252A] p-0.5 bg-white shadow-sm flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105">
+          <div className="flex items-center gap-3 cursor-pointer group select-none" onClick={() => setActiveTab('dashboard')}>
+            <div className="relative flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105">
                 <img
                   src="/ims-logo.png"
                   alt="IMS Studio Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 dark:border-[#0d1117] border-white" title="Studio System Active"></div>
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 dark:border-[#0d1117] border-white" title="Studio System Active"></div>
             </div>
 
-            <div className="flex flex-col cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg tracking-tight dark:text-white text-slate-900">
+            <div className="flex flex-col justify-center">
+              <div className="flex items-center gap-2 leading-none">
+                <span className="font-extrabold text-[17px] tracking-tight dark:text-white text-slate-900 leading-none">
                   IMS <span className="text-[#E5252A]">Studio</span>
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded dark:bg-[#E5252A]/20 bg-[#E5252A]/10 text-[#E5252A]">
+                <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded dark:bg-[#E5252A]/20 bg-[#E5252A]/10 text-[#E5252A] leading-none inline-flex items-center">
                   Experiential
                 </span>
               </div>
-              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 -mt-0.5">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 leading-none">
                 Work & Production Management
               </span>
             </div>
@@ -290,7 +290,7 @@ export function Navbar({ onOpenSyncModal, onOpenNewBrief, onOpenNewProject, onOp
                 <span>{item.label}</span>
                 {item.badge !== undefined && item.badge > 0 && (
                   <span
-                    className={`ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    className={`ml-1 text-[10px] px-1.5 py-0.5 leading-none rounded-full font-bold inline-flex items-center justify-center ${
                       isActive
                         ? 'bg-white text-[#E5252A]'
                         : 'bg-[#E5252A] text-white'

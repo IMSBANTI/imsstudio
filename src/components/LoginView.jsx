@@ -109,14 +109,14 @@ export function LoginView() {
       {/* Top Bar with Logo & Theme Toggle */}
       <div className="max-w-7xl mx-auto w-full px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-2 border-[#E5252A] p-0.5 bg-white flex items-center justify-center shadow-sm">
+          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm overflow-hidden flex-shrink-0">
             <img src="/ims-logo.png" alt="IMS Studio" className="w-full h-full object-contain" />
           </div>
-          <div>
-            <div className="font-extrabold text-lg tracking-tight dark:text-white text-slate-900 leading-none">
+          <div className="flex flex-col justify-center">
+            <div className="font-extrabold text-[17px] tracking-tight dark:text-white text-slate-900 leading-none">
               IMS <span className="text-[#E5252A]">Studio</span>
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1 leading-none">
               Experiential Work Management
             </div>
           </div>

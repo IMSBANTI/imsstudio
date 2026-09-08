@@ -86,30 +86,30 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* View Mode Switcher */}
-          <div className="flex items-center p-1 rounded-xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200">
+          <div className="h-9 flex items-center p-1 rounded-xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 shadow-sm">
             <button
               onClick={() => setViewMode('kanban')}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              className={`h-7 px-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center ${
                 viewMode === 'kanban'
-                  ? 'bg-[#E5252A] text-white'
+                  ? 'bg-[#E5252A] text-white shadow-xs'
                   : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'
               }`}
               title="Kanban Board View"
             >
-              <LayoutGrid size={16} />
+              <LayoutGrid size={15} />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              className={`h-7 px-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center ${
                 viewMode === 'list'
-                  ? 'bg-[#E5252A] text-white'
+                  ? 'bg-[#E5252A] text-white shadow-xs'
                   : 'text-slate-400 hover:text-slate-600 dark:hover:text-white'
               }`}
               title="Detailed List View"
             >
-              <List size={16} />
+              <List size={15} />
             </button>
           </div>
 
@@ -120,21 +120,21 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
                   clearSampleWork();
                 }
               }}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 hover:border-rose-500 hover:text-rose-500 dark:text-slate-300 text-slate-700 text-xs font-bold transition-all shadow-sm cursor-pointer"
+              className="h-9 flex items-center gap-1.5 px-3.5 rounded-xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 hover:border-rose-500 hover:text-rose-500 dark:text-slate-300 text-slate-700 text-xs font-bold transition-all shadow-sm cursor-pointer"
               title="Clear all sample client projects and tasks"
             >
               <Trash2 size={14} className="text-rose-500" />
-              Clear Sample Work
+              <span>Clear Sample Work</span>
             </button>
           )}
 
           {isManager && (
             <button
               onClick={onOpenNewProject}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white text-xs font-bold transition-all shadow-md shadow-red-900/10 cursor-pointer"
+              className="h-9 flex items-center gap-2 px-4 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white text-xs font-bold transition-all shadow-md shadow-red-900/10 cursor-pointer"
             >
-              <Plus size={16} />
-              Create Studio Project
+              <Plus size={15} />
+              <span>Create Studio Project</span>
             </button>
           )}
         </div>
@@ -145,13 +145,13 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
         
         {/* Search */}
         <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-2.5 text-slate-400" size={15} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={15} />
           <input
             type="text"
             placeholder="Search projects, clients, or screen specs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 rounded-xl text-xs dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 focus:outline-none focus:border-[#E5252A] dark:text-white text-slate-900"
+            className="w-full h-9 pl-9 pr-4 rounded-xl text-xs dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 focus:outline-none focus:border-[#E5252A] dark:text-white text-slate-900 font-medium"
           />
         </div>
 
@@ -160,7 +160,7 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
           <select
             value={selectedDept}
             onChange={(e) => setSelectedDept(e.target.value)}
-            className="px-3 py-1.5 rounded-xl text-xs dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-slate-300 text-slate-700"
+            className="h-9 px-3 rounded-xl text-xs dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-slate-300 text-slate-700 focus:outline-none focus:border-[#E5252A]"
           >
             <option value="All">All Departments</option>
             <option value="2D">2D Team</option>
@@ -171,7 +171,7 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-3 py-1.5 rounded-xl text-xs dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-slate-300 text-slate-700"
+            className="h-9 px-3 rounded-xl text-xs dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-slate-300 text-slate-700 focus:outline-none focus:border-[#E5252A]"
           >
             <option value="All">All Statuses</option>
             <option value="Pending">Pending</option>

@@ -124,10 +124,10 @@ export function BDBriefsView({ onOpenNewBrief, onOpenHandoverModal }) {
 
         <button
           onClick={onOpenNewBrief}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white text-xs font-bold transition-all shadow-md shadow-red-900/10 cursor-pointer self-start md:self-auto"
+          className="h-9 flex items-center gap-2 px-4 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white text-xs font-bold transition-all shadow-md shadow-red-900/10 cursor-pointer self-start md:self-auto"
         >
-          <Plus size={16} />
-          Create New BD Brief / Pitch
+          <Plus size={15} />
+          <span>Create New BD Brief / Pitch</span>
         </button>
       </div>
 

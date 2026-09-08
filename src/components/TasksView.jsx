@@ -91,10 +91,10 @@ export function TasksView({ onOpenNewTask }) {
         {isManager ? (
           <button
             onClick={onOpenNewTask}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white text-xs font-bold transition-all shadow-md shadow-red-900/10 cursor-pointer self-start md:self-auto"
+            className="h-9 flex items-center gap-2 px-4 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white text-xs font-bold transition-all shadow-md shadow-red-900/10 cursor-pointer self-start md:self-auto"
           >
-            <Plus size={16} />
-            Assign New Task
+            <Plus size={15} />
+            <span>Assign New Task</span>
           </button>
         ) : (
           <div className="text-xs text-slate-400 flex items-center gap-1.5 self-start md:self-auto">
