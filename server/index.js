@@ -593,6 +593,10 @@ if (fs.existsSync(DIST_DIR)) {
   app.get(/^(?!\/api).*/, (req, res) => {
     res.sendFile(path.join(DIST_DIR, 'index.html'));
   });
+} else {
+  app.get('/', (req, res) => {
+    res.status(200).send('<html><body><h1>IMS Studio API Server is running</h1><p>Client assets compiling or ready. Please visit /api/health for system status.</p></body></html>');
+  });
 }
 
 app.listen(PORT, '0.0.0.0', () => {
