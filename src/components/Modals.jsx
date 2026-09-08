@@ -16,7 +16,10 @@ import {
   Network,
   Globe,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Edit2,
+  Trash2,
+  Banknote
 } from 'lucide-react';
 
 // --- 1. New BD Brief Modal ---
@@ -1385,3 +1388,382 @@ export function DataSyncModal({ isOpen, onClose }) {
     </div>
   );
 }
+
+// --- 10. Edit Role Modal (Hierarchy & Pricing) ---
+export function EditRoleModal({ isOpen, onClose, role }) {
+  const { data, updateRole, deleteRole, isAdmin } = useStudio();
+  const [departmentId, setDepartmentId] = useState('');
+  const [title, setTitle] = useState('');
+  const [level, setLevel] = useState('Senior');
+  const [hourlyRateBDT, setHourlyRateBDT] = useState(1800);
+
+  React.useEffect(() => {
+    if (role) {
+      setDepartmentId(role.departmentId || data.departments[0]?.id || '');
+      setTitle(role.title || '');
+      setLevel(role.level || 'Senior');
+      setHourlyRateBDT(role.hourlyRateBDT || 1800);
+    }
+  }, [role, data.departments]);
+
+  if (!isOpen || !role) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    updateRole(role.id, {
+      departmentId,
+      title,
+      level,
+      hourlyRateBDT: Number(hourlyRateBDT) || 1500
+    });
+    onClose();
+  };
+
+  const handleDelete = () => {
+    if (confirm(`Are you sure you want to delete the role "${role.title}"?`)) {
+      deleteRole(role.id);
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-md rounded-2xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 shadow-2xl p-6 space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b dark:border-[#21262d] border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+              <Edit2 size={20} />
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold dark:text-white text-slate-900">Edit Role & Pricing</h2>
+              <p className="text-xs text-slate-400">Update standard hourly billing rate & hierarchy level</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Department *</label>
+            <select
+              value={departmentId}
+              onChange={e => setDepartmentId(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+            >
+              {data.departments.map(d => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Role Title *</label>
+            <input
+              required
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Seniority Level</label>
+            <select
+              value={level}
+              onChange={e => setLevel(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+            >
+              <option value="Senior Management">Senior Management</option>
+              <option value="Management">Management</option>
+              <option value="Lead">Lead</option>
+              <option value="Senior">Senior</option>
+              <option value="Mid-Level">Mid-Level</option>
+              <option value="Junior / Associate">Junior / Associate</option>
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300 flex items-center justify-between">
+              <span>Standard Hourly Rate (BDT ৳/hr) *</span>
+              <span className="text-[11px] text-emerald-500 font-mono font-bold">
+                ৳{Number(hourlyRateBDT || 0).toLocaleString('en-US')}/hr
+              </span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 font-bold text-slate-400">৳</span>
+              <input
+                required
+                type="number"
+                step="100"
+                min="0"
+                value={hourlyRateBDT}
+                onChange={e => setHourlyRateBDT(Number(e.target.value))}
+                className="w-full pl-8 pr-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 font-mono"
+              />
+            </div>
+            <p className="text-[11px] text-slate-400">
+              New team members assigned to this role will default to this standard hourly billable rate.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t dark:border-[#21262d] border-slate-100">
+            {isAdmin ? (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="text-xs text-rose-500 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Trash2 size={13} /> Delete Role
+              </button>
+            ) : <div />}
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white font-bold transition-all shadow-md shadow-red-900/20 cursor-pointer"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// --- 11. Edit Team Member Modal (Profile, Capacity & Pricing) ---
+export function EditMemberModal({ isOpen, onClose, member }) {
+  const { data, updateMember } = useStudio();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    departmentId: '',
+    departmentName: '',
+    roleId: '',
+    roleTitle: '',
+    roleType: 'visualizer',
+    hourlyRateBDT: 1500,
+    weeklyCapacityHours: 40
+  });
+
+  React.useEffect(() => {
+    if (member) {
+      setFormData({
+        name: member.name || '',
+        email: member.email || '',
+        phone: member.phone || '',
+        departmentId: member.departmentId || data.departments[0]?.id || '',
+        departmentName: member.departmentName || '',
+        roleId: member.roleId || '',
+        roleTitle: member.roleTitle || '',
+        roleType: member.roleType || 'visualizer',
+        hourlyRateBDT: member.hourlyRateBDT || 1500,
+        weeklyCapacityHours: member.weeklyCapacityHours || 40
+      });
+    }
+  }, [member, data.departments]);
+
+  if (!isOpen || !member) return null;
+
+  const availableRoles = data.roles.filter(r => r.departmentId === formData.departmentId);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    updateMember(member.id, {
+      ...formData,
+      hourlyRateBDT: Number(formData.hourlyRateBDT) || 1500,
+      weeklyCapacityHours: Number(formData.weeklyCapacityHours) || 40
+    });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-lg rounded-2xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 shadow-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-3 border-b dark:border-[#21262d] border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+              <Edit2 size={20} />
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold dark:text-white text-slate-900">
+                Edit Team Member & Valuation
+              </h2>
+              <p className="text-xs text-slate-400">Update artist pricing, role assignment & weekly capacity</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Full Name *</label>
+            <input
+              required
+              type="text"
+              value={formData.name}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Department *</label>
+              <select
+                value={formData.departmentId}
+                onChange={e => {
+                  const dept = data.departments.find(d => d.id === e.target.value);
+                  const firstRole = data.roles.find(r => r.departmentId === e.target.value);
+                  setFormData({
+                    ...formData,
+                    departmentId: e.target.value,
+                    departmentName: dept ? dept.name : '',
+                    roleId: firstRole?.id || '',
+                    roleTitle: firstRole?.title || '',
+                    hourlyRateBDT: firstRole?.hourlyRateBDT || formData.hourlyRateBDT
+                  });
+                }}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              >
+                {data.departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Role Designation</label>
+              <select
+                value={formData.roleId}
+                onChange={e => {
+                  const roleObj = data.roles.find(r => r.id === e.target.value);
+                  setFormData({
+                    ...formData,
+                    roleId: e.target.value,
+                    roleTitle: roleObj ? roleObj.title : formData.roleTitle,
+                    hourlyRateBDT: roleObj?.hourlyRateBDT || formData.hourlyRateBDT
+                  });
+                }}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              >
+                {availableRoles.map(r => (
+                  <option key={r.id} value={r.id}>{r.title}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Pricing & Billable Rate Highlight Box */}
+          <div className="p-3.5 rounded-xl dark:bg-[#0d1117] bg-emerald-50/50 border dark:border-[#30363d] border-emerald-200 space-y-2">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                  <Banknote size={15} /> Individual Billable Hourly Rate (BDT ৳/hr) *
+                </span>
+                <span className="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                  ৳{Number(formData.hourlyRateBDT || 0).toLocaleString('en-US')}/hr
+                </span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 font-bold text-slate-400">৳</span>
+                <input
+                  required
+                  type="number"
+                  step="100"
+                  min="0"
+                  value={formData.hourlyRateBDT}
+                  onChange={e => setFormData({ ...formData, hourlyRateBDT: Number(e.target.value) })}
+                  className="w-full pl-8 pr-3 py-2 rounded-xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-300 dark:text-white text-slate-900 font-mono font-bold"
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              💡 <strong>Productivity Valuation:</strong> When this member logs time, this individual rate calculates the exact monetary value (৳) of work completed across projects and displays on their productivity card.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Weekly Capacity (Hours)</label>
+              <input
+                type="number"
+                min="1"
+                max="80"
+                value={formData.weeklyCapacityHours}
+                onChange={e => setFormData({ ...formData, weeklyCapacityHours: Number(e.target.value) })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 font-mono"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Role Privilege Level</label>
+              <select
+                value={formData.roleType}
+                onChange={e => setFormData({ ...formData, roleType: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              >
+                <option value="visualizer">Artist / Visualizer</option>
+                <option value="manager">Studio Manager</option>
+                <option value="bd">Business Development</option>
+                <option value="admin">Studio Director / Admin</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Email Address *</label>
+            <input
+              required
+              type="email"
+              value={formData.email}
+              onChange={e => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Phone Contact</label>
+            <input
+              type="text"
+              value={formData.phone}
+              onChange={e => setFormData({ ...formData, phone: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t dark:border-[#21262d] border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white font-bold transition-all shadow-md shadow-red-900/20 cursor-pointer"
+            >
+              Save Member & Rates
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+

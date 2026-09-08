@@ -496,6 +496,38 @@ export function StudioProvider({ children }) {
     }
   };
 
+  const updateRole = async (id, updates) => {
+    if (!isAdmin) {
+      showToast('Permission Denied: Only Admins can edit roles', 'error');
+      return;
+    }
+    try {
+      await api.updateRole(id, updates);
+      await refreshData();
+      showToast(`Role '${updates.title || 'pricing'}' updated!`, 'success');
+    } catch (e) {
+      setData(prev => ({
+        ...prev,
+        roles: prev.roles.map(r => r.id === id ? { ...r, ...updates } : r)
+      }));
+      showToast('Role updated locally', 'info');
+    }
+  };
+
+  const deleteRole = async (id) => {
+    if (!isAdmin) {
+      showToast('Permission Denied: Only Admins can delete roles', 'error');
+      return;
+    }
+    try {
+      await api.deleteRole(id);
+      await refreshData();
+      showToast('Role removed', 'info');
+    } catch (e) {
+      setData(prev => ({ ...prev, roles: prev.roles.filter(r => r.id !== id) }));
+    }
+  };
+
   const resetAllData = async () => {
     if (!isAdmin) {
       showToast('Permission Denied: Only Admins can reset the database', 'error');
@@ -574,6 +606,8 @@ export function StudioProvider({ children }) {
         deleteMember,
         addDepartment,
         addRole,
+        updateRole,
+        deleteRole,
         resetAllData,
         importData
       }}

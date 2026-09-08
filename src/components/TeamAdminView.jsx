@@ -21,10 +21,13 @@ import {
   Lock,
   Banknote
 } from 'lucide-react';
+import { EditRoleModal, EditMemberModal } from './Modals';
 
 export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, onOpenAdminResetPassword }) {
   const { data, deleteMember, isAdmin, isManager, currentUser } = useStudio();
   const [selectedDeptFilter, setSelectedDeptFilter] = useState('All');
+  const [editingRole, setEditingRole] = useState(null);
+  const [editingMember, setEditingMember] = useState(null);
 
   const filteredMembers = data.members.filter(m => {
     if (selectedDeptFilter === 'All') return true;
@@ -144,13 +147,33 @@ export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, o
                     <span>Configured Roles ({deptRoles.length})</span>
                     <span>Rate & Level</span>
                   </div>
-                  <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
+                  <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
                     {deptRoles.map(r => (
-                      <div key={r.id} className="flex items-center justify-between text-[11px] py-0.5">
+                      <div
+                        key={r.id}
+                        onClick={() => isAdmin && setEditingRole(r)}
+                        className={`flex items-center justify-between text-[11px] py-1 px-1.5 rounded-lg transition-colors group ${
+                          isAdmin ? 'hover:bg-slate-200/60 dark:hover:bg-[#161b22] cursor-pointer' : ''
+                        }`}
+                        title={isAdmin ? "Click to edit role pricing & hierarchy level" : undefined}
+                      >
                         <span className="font-semibold dark:text-slate-200 text-slate-700 truncate pr-2">{r.title}</span>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
                           <span className="font-mono font-bold text-emerald-500 text-[10px]">{formatBDT(r.hourlyRateBDT || 1500)}/h</span>
                           <span className="text-slate-400 text-[10px]">{r.level}</span>
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingRole(r);
+                              }}
+                              className="text-slate-400 hover:text-[#E5252A] p-0.5 opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              title="Edit role pricing"
+                            >
+                              <Edit2 size={12} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -242,22 +265,36 @@ export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, o
                       <h3 className="text-sm font-bold dark:text-white text-slate-900 truncate">
                         {member.name}
                       </h3>
-                      {isAdmin && member.roleType !== 'admin' && (
+                      {isAdmin && (
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => onOpenAdminResetPassword(member)}
-                            className="text-slate-400 hover:text-[#E5252A] transition-colors p-1 cursor-pointer"
-                            title="Reset password for this member"
+                            type="button"
+                            onClick={() => setEditingMember(member)}
+                            className="text-slate-400 hover:text-blue-500 transition-colors p-1 cursor-pointer"
+                            title="Edit member pricing, role & capacity"
                           >
-                            <KeyRound size={13} />
+                            <Edit2 size={13} />
                           </button>
-                          <button
-                            onClick={() => deleteMember(member.id)}
-                            className="text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer"
-                            title="Remove member"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                          {member.roleType !== 'admin' && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => onOpenAdminResetPassword(member)}
+                                className="text-slate-400 hover:text-[#E5252A] transition-colors p-1 cursor-pointer"
+                                title="Reset password for this member"
+                              >
+                                <KeyRound size={13} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => deleteMember(member.id)}
+                                className="text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer"
+                                title="Remove member"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -272,9 +309,16 @@ export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, o
                       }`}>
                         {member.roleTitle}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-mono font-bold">
+                      <button
+                        type="button"
+                        onClick={() => isAdmin && setEditingMember(member)}
+                        className={`text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-mono font-bold transition-colors ${
+                          isAdmin ? 'hover:bg-emerald-500/20 hover:ring-1 hover:ring-emerald-500/30 cursor-pointer' : ''
+                        }`}
+                        title={isAdmin ? "Click to edit hourly billable rate" : undefined}
+                      >
                         {formatBDT(member.hourlyRateBDT || 1500)}/h
-                      </span>
+                      </button>
                     </div>
 
                     <div className="text-[11px] text-slate-400 mt-1">{member.departmentName}</div>
@@ -325,6 +369,20 @@ export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, o
           })}
         </div>
       </div>
+
+      {/* Role Hierarchy & Pricing Edit Modal */}
+      <EditRoleModal
+        isOpen={!!editingRole}
+        role={editingRole}
+        onClose={() => setEditingRole(null)}
+      />
+
+      {/* Team Member Profile & Individual Pricing Edit Modal */}
+      <EditMemberModal
+        isOpen={!!editingMember}
+        member={editingMember}
+        onClose={() => setEditingMember(null)}
+      />
 
     </div>
   );

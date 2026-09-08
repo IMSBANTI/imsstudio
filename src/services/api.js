@@ -245,5 +245,19 @@ export const api = {
       body: JSON.stringify(role)
     });
     return res.json();
+  },
+
+  async updateRole(id, updates) {
+    const res = await fetch(`${API_BASE}/roles/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    return res.json();
+  },
+
+  async deleteRole(id) {
+    const res = await fetch(`${API_BASE}/roles/${id}`, { method: 'DELETE' });
+    return res.json();
   }
 };
