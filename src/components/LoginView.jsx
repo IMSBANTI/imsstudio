@@ -8,8 +8,6 @@ import {
   ShieldCheck,
   Sun,
   Moon,
-  Sparkles,
-  Users,
   AlertCircle
 } from 'lucide-react';
 
@@ -54,55 +52,6 @@ export function LoginView() {
     }
   };
 
-  const handleQuickLogin = async (quickEmail) => {
-    setEmail(quickEmail);
-    setPassword('ims2026');
-    setError('');
-    setLoading(true);
-    try {
-      await performLogin(quickEmail, 'ims2026');
-    } catch (err) {
-      setError(err.message || 'Quick login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const demoAccounts = [
-    {
-      role: 'Admin / Studio Director',
-      badge: 'Full Admin Privileges',
-      badgeColor: 'bg-red-500/10 text-[#E5252A] border-red-500/30',
-      name: 'IMS Studio Director',
-      email: 'admin@ims-studio.com',
-      avatar: '/ims-logo.png'
-    },
-    {
-      role: 'Sr. Studio Manager (2D)',
-      badge: 'Management Privileges',
-      badgeColor: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
-      name: 'Farhan Rahman',
-      email: 'farhan.rahman@ims-studio.com',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
-    },
-    {
-      role: '3D Visualizer (Artist)',
-      badge: 'Visualizer Privileges',
-      badgeColor: 'bg-purple-500/10 text-purple-500 border-purple-500/30',
-      name: 'Rafiul Karim',
-      email: 'rafiul.karim@ims-studio.com',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80'
-    },
-    {
-      role: 'BD Lead',
-      badge: 'Business Development',
-      badgeColor: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
-      name: 'Shahriar Alam',
-      email: 'shahriar.bd@ims-studio.com',
-      avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80'
-    }
-  ];
-
   return (
     <div className="min-h-screen w-full flex flex-col justify-between dark:bg-[#0B0F14] bg-[#F8FAFC] text-slate-800 dark:text-slate-100 transition-colors duration-200">
       
@@ -131,20 +80,20 @@ export function LoginView() {
         </button>
       </div>
 
-      {/* Main Login Form Container */}
-      <div className="max-w-4xl mx-auto w-full px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      {/* Main Login Form Container - Centered */}
+      <div className="max-w-md mx-auto w-full px-4 py-8 flex items-center justify-center flex-1">
         
-        {/* Left Card: Login Form */}
-        <div className="lg:col-span-7 p-6 sm:p-8 rounded-3xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 shadow-xl space-y-6">
-          <div className="space-y-1.5">
+        {/* Login Form Card */}
+        <div className="w-full p-6 sm:p-8 rounded-3xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 shadow-xl space-y-6">
+          <div className="space-y-1.5 text-center">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#E5252A]/10 text-[#E5252A] border border-[#E5252A]/20">
               <ShieldCheck size={14} /> Authentication Portal
             </div>
-            <h1 className="text-2xl font-black dark:text-white text-slate-900 tracking-tight">
+            <h1 className="text-2xl font-black dark:text-white text-slate-900 tracking-tight pt-1">
               Sign In to IMS Studio
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Access your studio projects, visualizer tasks, timesheets, and notifications.
+              Enter your email and password to access the studio workspace.
             </p>
           </div>
 
@@ -203,48 +152,8 @@ export function LoginView() {
           </form>
 
           <div className="pt-4 border-t dark:border-[#21262d] border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-            <span>Default demo password: <strong className="font-mono text-[#E5252A]">ims2026</strong></span>
+            <span>Secure Staff Portal</span>
             <span>Experiential Studio v1.0.0</span>
-          </div>
-        </div>
-
-        {/* Right Card: Quick Demo Login Switcher */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-sm font-extrabold dark:text-white text-slate-900 flex items-center gap-2">
-              <Sparkles size={16} className="text-[#E5252A]" />
-              Quick Demo Login
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Click any role below to test privileges and assignment notifications instantly:
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {demoAccounts.map(account => (
-              <button
-                key={account.email}
-                onClick={() => handleQuickLogin(account.email)}
-                className="w-full p-3.5 rounded-2xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 hover:border-[#E5252A] text-left transition-all shadow-sm hover:shadow-md flex items-center gap-3 cursor-pointer group"
-              >
-                <img
-                  src={account.avatar}
-                  alt={account.name}
-                  className="w-10 h-10 rounded-full object-cover border-2 border-slate-300 dark:border-slate-700 group-hover:border-[#E5252A] transition-colors"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold dark:text-white text-slate-900 truncate">
-                      {account.name}
-                    </span>
-                    <span className={`text-[9px] px-2 py-0.5 rounded-full border font-bold ${account.badgeColor}`}>
-                      {account.role}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-400 truncate mt-0.5">{account.email}</div>
-                </div>
-              </button>
-            ))}
           </div>
         </div>
 
