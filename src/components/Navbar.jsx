@@ -19,10 +19,11 @@ import {
   LogOut,
   ShieldCheck,
   Sparkles,
-  Plus
+  Plus,
+  Camera
 } from 'lucide-react';
 
-export function Navbar({ onOpenSyncModal, onOpenNewBrief, onOpenNewProject, onOpenChangePassword }) {
+export function Navbar({ onOpenSyncModal, onOpenNewBrief, onOpenNewProject, onOpenChangePassword, onOpenProfilePicture }) {
   const {
     theme,
     toggleTheme,
@@ -240,6 +241,18 @@ export function Navbar({ onOpenSyncModal, onOpenNewBrief, onOpenNewProject, onOp
                       {currentUser?.departmentName} • {currentUser?.roleTitle}
                     </div>
                   </div>
+
+                  {/* Update Profile Picture Option */}
+                  <button
+                    onClick={() => {
+                      setUserDropdown(false);
+                      onOpenProfilePicture?.();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-left text-xs dark:text-slate-300 text-slate-700 dark:hover:bg-[#21262d] hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    <Camera size={15} className="text-[#E5252A]" />
+                    <span>Update Profile Picture</span>
+                  </button>
 
                   {/* Change Password Option */}
                   <button

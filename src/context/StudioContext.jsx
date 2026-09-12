@@ -507,6 +507,11 @@ export function StudioProvider({ children }) {
     }
     try {
       await api.updateMember(id, updates);
+      if (currentUser?.id === id) {
+        const updatedUser = { ...currentUser, ...updates };
+        setCurrentUser(updatedUser);
+        localStorage.setItem('ims_studio_current_user', JSON.stringify(updatedUser));
+      }
       await refreshData();
       showToast('Member profile updated', 'info');
     } catch (e) {
@@ -514,6 +519,11 @@ export function StudioProvider({ children }) {
         ...prev,
         members: prev.members.map(m => m.id === id ? { ...m, ...updates } : m)
       }));
+      if (currentUser?.id === id) {
+        const updatedUser = { ...currentUser, ...updates };
+        setCurrentUser(updatedUser);
+        localStorage.setItem('ims_studio_current_user', JSON.stringify(updatedUser));
+      }
     }
   };
 

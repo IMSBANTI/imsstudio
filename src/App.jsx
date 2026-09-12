@@ -11,6 +11,7 @@ import { TeamAdminView } from './components/TeamAdminView';
 import { AdminCategoryView } from './components/AdminCategoryView';
 import { Toast } from './components/Toast';
 import { ChangePasswordModal, AdminResetPasswordModal } from './components/ChangePasswordModal';
+import { ProfilePictureModal } from './components/ProfilePictureModal';
 import {
   NewBriefModal,
   HandoverToStudioModal,
@@ -36,6 +37,7 @@ function StudioApp() {
   const [isNewRoleOpen, setIsNewRoleOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isProfilePictureOpen, setIsProfilePictureOpen] = useState(false);
   const [adminResetMember, setAdminResetMember] = useState(null);
   const [handoverBrief, setHandoverBrief] = useState(null);
 
@@ -65,6 +67,7 @@ function StudioApp() {
         onOpenNewBrief={() => setIsNewBriefOpen(true)}
         onOpenNewProject={() => setIsNewProjectOpen(true)}
         onOpenChangePassword={() => setIsChangePasswordOpen(true)}
+        onOpenProfilePicture={() => setIsProfilePictureOpen(true)}
       />
 
       {/* Main Studio Viewport */}
@@ -145,6 +148,11 @@ function StudioApp() {
       <ChangePasswordModal
         isOpen={isChangePasswordOpen}
         onClose={() => setIsChangePasswordOpen(false)}
+      />
+
+      <ProfilePictureModal
+        isOpen={isProfilePictureOpen}
+        onClose={() => setIsProfilePictureOpen(false)}
       />
 
       <AdminResetPasswordModal
