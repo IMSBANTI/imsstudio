@@ -15,8 +15,176 @@ const DB_FILE = path.join(DATA_DIR, 'studio_db.json');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust reverse proxy headers (Render, Cloudflare, Nginx) for accurate client IP detection
+app.set('trust proxy', true);
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+// Health check endpoint (always accessible for Render deployment health monitoring)
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// --- IP Whitelisting Gate ---
+// Activated only when the ALLOWED_IPS environment variable is configured in Render
+app.use((req, res, next) => {
+  const allowedIpsEnv = process.env.ALLOWED_IPS;
+  // If ALLOWED_IPS is not defined or empty, allow all connections
+  if (!allowedIpsEnv || !allowedIpsEnv.trim()) {
+    return next();
+  }
+
+  // Extract client's real public IP address
+  const rawIp = req.headers['x-forwarded-for']
+    ? req.headers['x-forwarded-for'].split(',')[0].trim()
+    : (req.ip || req.socket.remoteAddress || '');
+  const clientIp = rawIp.replace(/^::ffff:/, '').trim();
+
+  // Allow localhost / loopback for server-side calls
+  if (clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === '') {
+    return next();
+  }
+
+  const allowedList = allowedIpsEnv
+    .split(',')
+    .map(ip => ip.trim())
+    .filter(Boolean);
+
+  // Check for exact match or subnet wildcard (e.g. 103.145.12.*)
+  const isAllowed = allowedList.some(allowed => {
+    if (allowed === '*' || allowed === clientIp) return true;
+    if (allowed.endsWith('*') && clientIp.startsWith(allowed.slice(0, -1))) return true;
+    return false;
+  });
+
+  if (isAllowed) {
+    return next();
+  }
+
+  console.warn(`[IMS Studio Security] Blocked access attempt from unauthorized IP: ${clientIp} on path: ${req.path}`);
+
+  // Return JSON for API requests
+  if (req.path.startsWith('/api/') || req.headers.accept?.includes('application/json')) {
+    return res.status(403).json({
+      error: 'Access restricted: Your IP is not whitelisted for this studio portal.',
+      clientIp
+    });
+  }
+
+  // Return styled access denied page for browser visitors
+  return res.status(403).send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>403 - Access Restricted | IMS Studio</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0B0F14;
+      color: #E6EDF3;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #161B22;
+      border: 1px solid #30363D;
+      border-radius: 24px;
+      padding: 38px 28px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+    }
+    .badge-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: rgba(229, 37, 42, 0.12);
+      border: 1px solid rgba(229, 37, 42, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 26px;
+    }
+    h1 {
+      color: #FFFFFF;
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .subtitle {
+      color: #8B949E;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .ip-box {
+      background: #0D1117;
+      border: 1px dashed #30363D;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 24px;
+    }
+    .ip-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #8B949E;
+      margin-bottom: 6px;
+    }
+    .ip-val {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 17px;
+      font-weight: bold;
+      color: #58A6FF;
+      user-select: all;
+    }
+    .instructions {
+      font-size: 12px;
+      color: #8B949E;
+      line-height: 1.6;
+      border-top: 1px solid #21262D;
+      padding-top: 20px;
+    }
+    .brand {
+      margin-top: 22px;
+      font-size: 11px;
+      color: #484F58;
+      font-weight: 600;
+    }
+    .brand span {
+      color: #E5252A;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge-icon">🔒</div>
+    <h1>Access Restricted</h1>
+    <p class="subtitle">This studio management portal is protected and only accessible from authorized company IP networks.</p>
+    <div class="ip-box">
+      <div class="ip-label">Your Detected Public IP</div>
+      <div class="ip-val">\${clientIp || 'Unknown IP'}</div>
+    </div>
+    <div class="instructions">
+      If you are an authorized team member, please send the IP address above to your IMS Studio administrator to whitelist your connection.
+    </div>
+    <div class="brand">IMS <span>Studio</span> Security Gate</div>
+  </div>
+</body>
+</html>
+  `);
+});
 
 // Ensure data directory and DB file exist
 if (!fs.existsSync(DATA_DIR)) {
