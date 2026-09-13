@@ -577,28 +577,28 @@ export function NewTaskModal({ isOpen, onClose }) {
   });
 
   React.useEffect(() => {
-    if (data.projects.length > 0 && !formData.projectId) {
-      const p = data.projects[0];
+    if (isOpen && data.projects.length > 0) {
+      const validProject = data.projects.find(p => p.id === formData.projectId) || data.projects[0];
       setFormData(prev => ({
         ...prev,
-        projectId: p.id,
-        screenSpecs: p.screenSpecs || prev.screenSpecs,
-        deliverableSpec: p.screenSpecs || prev.deliverableSpec
+        projectId: validProject.id,
+        screenSpecs: prev.screenSpecs || validProject.screenSpecs || '7680 x 1080 Ultra-wide LED',
+        deliverableSpec: prev.deliverableSpec || validProject.screenSpecs || '7680 x 1080 Ultra-wide LED'
       }));
     }
-  }, [data.projects, isOpen]);
+  }, [isOpen, data.projects]);
 
   if (!isOpen) return null;
 
-  const selectedProj = data.projects.find(p => p.id === formData.projectId);
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    const proj = data.projects.find(p => p.id === formData.projectId);
-    const member = data.members.find(m => m.id === formData.assigneeId);
+    const targetProjId = formData.projectId || data.projects[0]?.id || '';
+    const proj = data.projects.find(p => p.id === targetProjId);
+    const member = data.members.find(m => m.id === formData.assigneeId) || data.members[0];
     const resolvedSpecs = formData.screenSpecs || formData.deliverableSpec || proj?.screenSpecs || '7680 x 1080 Ultra-wide LED';
     addTask({
       ...formData,
+      projectId: targetProjId,
       screenSpecs: resolvedSpecs,
       deliverableSpec: resolvedSpecs,
       description: formData.description || '',
@@ -645,7 +645,8 @@ export function NewTaskModal({ isOpen, onClose }) {
             <div className="space-y-1">
               <label className="font-bold text-slate-600 dark:text-slate-300">Studio Project *</label>
               <select
-                value={formData.projectId}
+                required
+                value={formData.projectId || data.projects[0]?.id || ''}
                 onChange={e => {
                   const newProjId = e.target.value;
                   const p = data.projects.find(proj => proj.id === newProjId);
