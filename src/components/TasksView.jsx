@@ -8,6 +8,7 @@ import {
   RotateCcw,
   Clock,
   Play,
+  Pause,
   Calendar,
   AlertCircle,
   Sparkles,

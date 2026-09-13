@@ -23,6 +23,7 @@ import {
   NewRoleModal,
   DataSyncModal
 } from './components/Modals';
+import { AlertCircle } from 'lucide-react';
 
 function StudioApp() {
   const { activeTab, theme, currentUser } = useStudio();
@@ -211,10 +212,49 @@ function StudioApp() {
   );
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error('IMS Studio UI Error:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-6 bg-[#0B0F14] text-white font-sans">
+          <div className="max-w-md w-full p-6 rounded-2xl bg-[#161b22] border border-[#30363d] text-center space-y-4 shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 text-[#E5252A] flex items-center justify-center mx-auto">
+              <AlertCircle size={24} />
+            </div>
+            <h2 className="text-base font-bold">Studio Interface Recovered</h2>
+            <p className="text-xs text-slate-400">
+              An unexpected render issue occurred. Click below to refresh your session smoothly.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-5 py-2 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white text-xs font-bold transition-all cursor-pointer shadow-md"
+            >
+              Refresh Workspace
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <StudioProvider>
-      <StudioApp />
-    </StudioProvider>
+    <ErrorBoundary>
+      <StudioProvider>
+        <StudioApp />
+      </StudioProvider>
+    </ErrorBoundary>
   );
 }
