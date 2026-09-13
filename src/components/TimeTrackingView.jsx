@@ -163,7 +163,12 @@ export function TimeTrackingView({ onOpenLogTimeModal }) {
               <label className="text-[10px] font-bold uppercase text-slate-400">Target Project</label>
               <select
                 value={activeProjectId}
-                onChange={(e) => setActiveProjectId(e.target.value)}
+                onChange={(e) => {
+                  const newProjId = e.target.value;
+                  setActiveProjectId(newProjId);
+                  const firstTask = data.tasks.find(t => t.projectId === newProjId);
+                  setActiveTaskId(firstTask?.id || '');
+                }}
                 className="w-full mt-1 px-3 py-2 rounded-xl text-xs dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
               >
                 {data.projects.map(p => (
@@ -179,9 +184,13 @@ export function TimeTrackingView({ onOpenLogTimeModal }) {
                 onChange={(e) => setActiveTaskId(e.target.value)}
                 className="w-full mt-1 px-3 py-2 rounded-xl text-xs dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
               >
-                {data.tasks.filter(t => t.projectId === activeProjectId).map(t => (
-                  <option key={t.id} value={t.id}>{t.title}</option>
-                ))}
+                {data.tasks.filter(t => t.projectId === activeProjectId).length === 0 ? (
+                  <option value="">(No tasks created for this project yet)</option>
+                ) : (
+                  data.tasks.filter(t => t.projectId === activeProjectId).map(t => (
+                    <option key={t.id} value={t.id}>{t.title}</option>
+                  ))
+                )}
               </select>
             </div>
           </div>
