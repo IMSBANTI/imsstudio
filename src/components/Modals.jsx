@@ -421,7 +421,10 @@ export function NewProjectModal({ isOpen, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    addProject(formData);
+    addProject({
+      ...formData,
+      screenSpecs: formData.screenSpecs || 'Standard LED Wall'
+    });
     onClose();
   };
 
@@ -522,14 +525,13 @@ export function NewProjectModal({ isOpen, onClose }) {
           </div>
 
           <div className="space-y-1">
-            <label className="font-bold text-slate-600 dark:text-slate-300">Screen Specs / Canvas Resolution *</label>
-            <input
-              required
-              type="text"
-              placeholder="e.g. 7680 x 1080 Main LED Wall"
-              value={formData.screenSpecs}
-              onChange={e => setFormData({ ...formData, screenSpecs: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 font-mono"
+            <label className="font-bold text-slate-600 dark:text-slate-300">Task Description</label>
+            <textarea
+              rows={3}
+              placeholder="Describe the project tasks, visualizer directives, or deliverables..."
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 resize-none leading-relaxed"
             />
           </div>
 

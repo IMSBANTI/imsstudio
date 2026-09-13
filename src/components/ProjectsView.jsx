@@ -38,6 +38,7 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.screenSpecs?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesDept = selectedDept === 'All' || p.department.toLowerCase().includes(selectedDept.toLowerCase());
@@ -311,15 +312,26 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
                             </div>
                           </div>
 
-                          {/* Experiential Specs Pill */}
-                          <div className="p-2 rounded-lg dark:bg-[#0d1117] bg-slate-50 border dark:border-[#21262d] border-slate-200 text-[11px] space-y-1">
-                            <div className="text-slate-400 text-[9px] uppercase font-bold flex items-center gap-1">
-                              <Tv size={11} /> Screen Resolution
+                          {/* Task Description / Screen Specs */}
+                          {proj.description ? (
+                            <div className="p-2 rounded-lg dark:bg-[#0d1117] bg-slate-50 border dark:border-[#21262d] border-slate-200 text-[11px] space-y-1">
+                              <div className="text-slate-400 text-[9px] uppercase font-bold flex items-center gap-1">
+                                <Sparkles size={11} className="text-[#E5252A]" /> Task Description
+                              </div>
+                              <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed" title={proj.description}>
+                                {proj.description}
+                              </p>
                             </div>
-                            <div className="font-mono text-[10px] font-semibold dark:text-slate-200 text-slate-700 truncate" title={proj.screenSpecs}>
-                              {proj.screenSpecs}
+                          ) : proj.screenSpecs ? (
+                            <div className="p-2 rounded-lg dark:bg-[#0d1117] bg-slate-50 border dark:border-[#21262d] border-slate-200 text-[11px] space-y-1">
+                              <div className="text-slate-400 text-[9px] uppercase font-bold flex items-center gap-1">
+                                <Tv size={11} /> Screen Resolution
+                              </div>
+                              <div className="font-mono text-[10px] font-semibold dark:text-slate-200 text-slate-700 truncate" title={proj.screenSpecs}>
+                                {proj.screenSpecs}
+                              </div>
                             </div>
-                          </div>
+                          ) : null}
 
                           {/* Hours Progress */}
                           <div className="space-y-1">
@@ -393,7 +405,7 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
                   <th className="py-3 px-4">Code & Project</th>
                   <th className="py-3 px-4">Client & Venue</th>
                   <th className="py-3 px-4">Dept</th>
-                  <th className="py-3 px-4">Screen Specs</th>
+                  <th className="py-3 px-4">Task Description / Specs</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Event Date</th>
                   <th className="py-3 px-4">Studio Hours</th>
@@ -426,8 +438,8 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
                         </span>
                       </td>
                       <td className="py-3.5 px-4 max-w-[220px]">
-                        <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 truncate" title={proj.screenSpecs}>
-                          {proj.screenSpecs}
+                        <div className="text-[11px] text-slate-600 dark:text-slate-300 truncate" title={proj.description || proj.screenSpecs}>
+                          {proj.description || proj.screenSpecs}
                         </div>
                         <div className="text-[10px] text-slate-400">{proj.frameRate} • {proj.mediaServerFormat}</div>
                       </td>
