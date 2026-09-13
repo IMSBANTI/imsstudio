@@ -206,6 +206,24 @@ if (process.env.DATABASE_URL) {
   }
 }
 
+function normalizeMemberRoleType(m) {
+  if (!m) return m;
+  const title = (m.roleTitle || '').toLowerCase();
+  const roleId = (m.roleId || '').toLowerCase();
+  const deptId = (m.departmentId || '').toLowerCase();
+  
+  if (m.roleType === 'admin' || /director|executive director/i.test(title)) {
+    return { ...m, roleType: 'admin' };
+  }
+  if (/manager|lead.*studio|lead.*3d|lead.*2d/i.test(title) || /manager|mgr/i.test(roleId)) {
+    return { ...m, roleType: 'manager' };
+  }
+  if (/bd|business/i.test(title) || /bd/i.test(deptId)) {
+    return { ...m, roleType: 'bd' };
+  }
+  return { ...m, roleType: m.roleType || 'visualizer' };
+}
+
 function loadDatabase() {
   try {
     if (fs.existsSync(DB_FILE)) {
@@ -217,6 +235,7 @@ function loadDatabase() {
       if (!parsed.members || !parsed.members.find(m => m.roleType === 'admin')) {
         parsed.members = [initialData.members[0], ...(parsed.members || [])];
       }
+      parsed.members = parsed.members.map(normalizeMemberRoleType);
       return parsed;
     }
   } catch (err) {
@@ -262,6 +281,14 @@ async function initStorage() {
     if (res.rows.length > 0 && res.rows[0].payload) {
       db = res.rows[0].payload;
       db.lastModified = Number(res.rows[0].last_modified);
+      if (db.members) {
+        const before = JSON.stringify(db.members);
+        db.members = db.members.map(normalizeMemberRoleType);
+        if (JSON.stringify(db.members) !== before) {
+          saveDatabase(db);
+          console.log('[IMS Studio] Normalized member roles in Cloud PostgreSQL');
+        }
+      }
       console.log('[IMS Studio] Successfully loaded persistent state from Cloud PostgreSQL database');
     }
   } catch (err) {
@@ -305,13 +332,20 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   // Return authenticated profile (strip sensitive internal info if needed, but include permissions)
-  const { password: _, ...userProfile } = member;
+  const normalized = normalizeMemberRoleType(member);
+  const { password: _, ...userProfile } = normalized;
+  const isMgr = normalized.roleType === 'admin' ||
+    normalized.roleType === 'manager' ||
+    /manager|director|lead|head|supervisor/i.test(normalized.roleTitle || '') ||
+    /manager|mgr/i.test(normalized.roleId || '');
+
   res.json({
     success: true,
     user: {
       ...userProfile,
-      isAdmin: member.roleType === 'admin',
-      isManager: member.roleType === 'admin' || member.roleType === 'manager'
+      roleType: isMgr && normalized.roleType !== 'admin' ? 'manager' : normalized.roleType,
+      isAdmin: normalized.roleType === 'admin',
+      isManager: isMgr
     }
   });
 });
@@ -809,14 +843,14 @@ app.delete('/api/roles/:id', (req, res) => {
 
 // --- Team Members ---
 app.post('/api/members', (req, res) => {
-  const newMember = {
+  let newMember = {
     id: `mem-${Date.now()}`,
     status: 'Active',
     weeklyCapacityHours: 40,
     password: req.body.password || 'ims2026',
-    roleType: req.body.roleType || 'visualizer',
     ...req.body
   };
+  newMember = normalizeMemberRoleType(newMember);
   db.members.push(newMember);
   saveDatabase(db);
   res.status(201).json(newMember);
@@ -825,7 +859,8 @@ app.post('/api/members', (req, res) => {
 app.put('/api/members/:id', (req, res) => {
   const idx = db.members.findIndex(m => m.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Member not found' });
-  db.members[idx] = { ...db.members[idx], ...req.body };
+  const updated = normalizeMemberRoleType({ ...db.members[idx], ...req.body });
+  db.members[idx] = updated;
   saveDatabase(db);
   res.json(db.members[idx]);
 });

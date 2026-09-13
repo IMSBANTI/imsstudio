@@ -215,9 +215,20 @@ export function Navbar({ onOpenSyncModal, onOpenNewBrief, onOpenNewProject, onOp
                     <span className="text-xs font-bold dark:text-white text-slate-900 leading-tight truncate max-w-[120px]">
                       {currentUser?.name || 'User'}
                     </span>
-                    <span className={`text-[9px] uppercase px-1.5 py-0.2 rounded border font-bold ${getRoleBadge(currentUser?.roleType)}`}>
-                      {currentUser?.roleType || 'user'}
-                    </span>
+                    {(() => {
+                      const effectiveRoleType = isAdmin
+                        ? 'admin'
+                        : isManager
+                        ? 'manager'
+                        : isBD
+                        ? 'bd'
+                        : (currentUser?.roleType || 'visualizer');
+                      return (
+                        <span className={`text-[9px] uppercase px-1.5 py-0.2 rounded border font-bold ${getRoleBadge(effectiveRoleType)}`}>
+                          {effectiveRoleType}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[130px]">
                     {currentUser?.roleTitle || 'Studio Member'}

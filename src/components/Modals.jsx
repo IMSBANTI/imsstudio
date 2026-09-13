@@ -858,13 +858,27 @@ export function LogTimeModal({ isOpen, onClose }) {
 export function NewMemberModal({ isOpen, onClose }) {
   const { data, addMember } = useStudio();
 
+  const inferRoleType = (roleTitle, roleId, deptId) => {
+    const t = (roleTitle || '').toLowerCase();
+    const r = (roleId || '').toLowerCase();
+    const d = (deptId || '').toLowerCase();
+    if (/admin|director/i.test(t)) return 'admin';
+    if (/manager|lead.*studio|lead.*3d|lead.*2d/i.test(t) || /manager|mgr/i.test(r)) return 'manager';
+    if (/bd|business/i.test(t) || /bd/i.test(d)) return 'bd';
+    return 'visualizer';
+  };
+
+  const firstRole = data.roles[0];
+  const initialRoleType = inferRoleType(firstRole?.title, firstRole?.id, data.departments[0]?.id);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     departmentId: data.departments[0]?.id || 'dept-2d',
-    roleId: data.roles[0]?.id || '',
-    hourlyRateBDT: data.roles[0]?.hourlyRateBDT || 1500,
+    roleId: firstRole?.id || '',
+    roleType: initialRoleType,
+    hourlyRateBDT: firstRole?.hourlyRateBDT || 1500,
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
   });
 
@@ -874,8 +888,10 @@ export function NewMemberModal({ isOpen, onClose }) {
     e.preventDefault();
     const dept = data.departments.find(d => d.id === formData.departmentId);
     const role = data.roles.find(r => r.id === formData.roleId);
+    const finalRoleType = formData.roleType || inferRoleType(role?.title, formData.roleId, formData.departmentId);
     addMember({
       ...formData,
+      roleType: finalRoleType,
       departmentName: dept ? dept.name : 'Studio',
       roleTitle: role ? role.title : 'Visualizer',
       hourlyRateBDT: Number(formData.hourlyRateBDT) || role?.hourlyRateBDT || 1500
@@ -923,12 +939,14 @@ export function NewMemberModal({ isOpen, onClose }) {
                 value={formData.departmentId}
                 onChange={e => {
                   const newDeptId = e.target.value;
-                  const firstRole = data.roles.find(r => r.departmentId === newDeptId);
+                  const matchingRoles = data.roles.filter(r => r.departmentId === newDeptId);
+                  const firstMatching = matchingRoles[0];
                   setFormData({
                     ...formData,
                     departmentId: newDeptId,
-                    roleId: firstRole ? firstRole.id : '',
-                    hourlyRateBDT: firstRole?.hourlyRateBDT || formData.hourlyRateBDT
+                    roleId: firstMatching ? firstMatching.id : '',
+                    roleType: inferRoleType(firstMatching?.title, firstMatching?.id, newDeptId),
+                    hourlyRateBDT: firstMatching?.hourlyRateBDT || formData.hourlyRateBDT
                   });
                 }}
                 className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
@@ -949,6 +967,7 @@ export function NewMemberModal({ isOpen, onClose }) {
                   setFormData({
                     ...formData,
                     roleId,
+                    roleType: inferRoleType(role?.title, roleId, formData.departmentId),
                     hourlyRateBDT: role?.hourlyRateBDT || formData.hourlyRateBDT
                   });
                 }}
@@ -959,6 +978,20 @@ export function NewMemberModal({ isOpen, onClose }) {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Privilege & System Role *</label>
+            <select
+              value={formData.roleType}
+              onChange={e => setFormData({ ...formData, roleType: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 font-medium"
+            >
+              <option value="manager">Studio Manager (Can create projects, assign tasks, review deliverables)</option>
+              <option value="visualizer">Artist / Visualizer (Assigned tasks, logs hours)</option>
+              <option value="bd">Business Development (Client briefs & handovers)</option>
+              <option value="admin">Studio Director / Admin (Full admin privileges)</option>
+            </select>
           </div>
 
           <div className="space-y-1">

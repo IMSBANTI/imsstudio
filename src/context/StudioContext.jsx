@@ -27,7 +27,17 @@ export function StudioProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('ims_studio_current_user');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try {
+        const u = JSON.parse(saved);
+        if (u) {
+          const title = (u.roleTitle || '').toLowerCase();
+          const roleId = (u.roleId || '').toLowerCase();
+          if (u.roleType !== 'admin' && (/manager|lead.*studio|lead.*3d|lead.*2d/i.test(title) || /manager|mgr/i.test(roleId))) {
+            u.roleType = 'manager';
+          }
+          return u;
+        }
+      } catch (e) {}
     }
     return null;
   });
@@ -264,10 +274,17 @@ export function StudioProvider({ children }) {
   };
 
   // --- Role & Privilege Checkers ---
-  const isAdmin = currentUser?.roleType === 'admin';
-  const isManager = currentUser?.roleType === 'admin' || currentUser?.roleType === 'manager';
-  const isVisualizer = currentUser?.roleType === 'visualizer';
-  const isBD = currentUser?.roleType === 'bd';
+  const currentRoleType = (currentUser?.roleType || '').toLowerCase();
+  const currentRoleTitle = (currentUser?.roleTitle || '').toLowerCase();
+  const currentRoleId = (currentUser?.roleId || '').toLowerCase();
+
+  const isAdmin = currentRoleType === 'admin' || /director|admin/i.test(currentRoleTitle);
+  const isManager = isAdmin ||
+    currentRoleType === 'manager' ||
+    /manager|director|lead|head|supervisor/i.test(currentRoleTitle) ||
+    /mgr|manager|lead/i.test(currentRoleId);
+  const isBD = currentRoleType === 'bd' || /bd|business/i.test(currentRoleTitle);
+  const isVisualizer = !isAdmin && !isManager && !isBD;
 
   // Timer controls
   const startTimer = (projectId, taskId) => {
