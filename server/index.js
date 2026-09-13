@@ -653,6 +653,16 @@ app.delete('/api/projects/:id', (req, res) => {
 
 // --- Tasks ---
 app.post('/api/tasks', (req, res) => {
+  let projectId = req.body.projectId;
+  let projectTitle = req.body.projectTitle;
+  if (!projectId && db.projects && db.projects.length > 0) {
+    projectId = db.projects[0].id;
+    projectTitle = db.projects[0].title;
+  } else if (projectId && (!projectTitle || projectTitle === 'Studio Project')) {
+    const matched = (db.projects || []).find(p => p.id === projectId);
+    if (matched) projectTitle = matched.title;
+  }
+
   const newTask = {
     id: `task-${Date.now()}`,
     loggedHours: 0,
@@ -660,7 +670,9 @@ app.post('/api/tasks', (req, res) => {
     status: req.body.status || 'Pending',
     priority: req.body.priority || 'Medium',
     createdAt: new Date().toISOString(),
-    ...req.body
+    ...req.body,
+    projectId: projectId || req.body.projectId || '',
+    projectTitle: projectTitle || req.body.projectTitle || 'Studio Project'
   };
   db.tasks.unshift(newTask);
 
