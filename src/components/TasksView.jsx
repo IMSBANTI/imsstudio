@@ -23,7 +23,7 @@ import {
 import { EditTaskModal } from './Modals';
 
 export function TasksView({ onOpenNewTask }) {
-  const { data, updateTask, deleteTask, startTimer, currentUser, isManager, isAdmin } = useStudio();
+  const { data, updateTask, deleteTask, startTimer, pauseTimer, timerState, currentUser, isManager, isAdmin } = useStudio();
 
   const [editingTask, setEditingTask] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -341,14 +341,25 @@ export function TasksView({ onOpenNewTask }) {
                             )}
                           </div>
 
-                          {/* Quick Punch In Timer */}
-                          <button
-                            onClick={() => startTimer(task.projectId, task.id)}
-                            title="Start Stopwatch for this Task"
-                            className="flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-[#E5252A]/10 hover:bg-[#E5252A] text-[#E5252A] hover:text-white font-bold transition-all cursor-pointer"
-                          >
-                            <Play size={10} /> Track
-                          </button>
+                          {/* Quick Punch In / Out Timer */}
+                          {timerState.isRunning && timerState.taskId === task.id ? (
+                            <button
+                              onClick={() => pauseTimer()}
+                              title="Pause Stopwatch for this Task"
+                              className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/30 cursor-pointer shadow-xs"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                              <Pause size={10} /> Tracking
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => startTimer(task.projectId, task.id)}
+                              title="Start Stopwatch for this Task"
+                              className="flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-[#E5252A]/10 hover:bg-[#E5252A] text-[#E5252A] hover:text-white font-bold transition-all cursor-pointer"
+                            >
+                              <Play size={10} /> Track
+                            </button>
+                          )}
                         </div>
 
                         {/* Move Status Dropdown (Visualizer can move their own task or Managers can move any) */}

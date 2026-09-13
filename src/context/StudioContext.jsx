@@ -288,12 +288,17 @@ export function StudioProvider({ children }) {
 
   // Timer controls
   const startTimer = (projectId, taskId) => {
+    const targetTask = taskId ? data.tasks.find(t => t.id === taskId) : null;
+    const resolvedProjectId = projectId || targetTask?.projectId || data.projects[0]?.id || '';
     setTimerState(prev => ({
       ...prev,
-      projectId: projectId || prev.projectId,
-      taskId: taskId || prev.taskId,
+      projectId: resolvedProjectId || prev.projectId,
+      taskId: taskId || prev.taskId || (data.tasks.find(t => t.projectId === resolvedProjectId)?.id) || '',
       isRunning: true
     }));
+    if (targetTask) {
+      showToast(`Stopwatch started for "${targetTask.title}"`, 'info');
+    }
   };
 
   const pauseTimer = () => {
