@@ -287,9 +287,26 @@ export function StudioProvider({ children }) {
   const isVisualizer = !isAdmin && !isManager && !isBD;
 
   // Timer controls
-  const startTimer = (projectId, taskId) => {
+  const startTimer = async (projectId, taskId) => {
     const targetTask = taskId ? data.tasks.find(t => t.id === taskId) : null;
     const resolvedProjectId = projectId || targetTask?.projectId || data.projects[0]?.id || '';
+
+    // If already tracking another task with significant time (>= 15s), auto-log it before switching!
+    if (timerState.isRunning && timerState.taskId && taskId && timerState.taskId !== taskId && timerState.seconds >= 15) {
+      await stopAndSaveTimer('Auto-logged on task switch');
+      setTimerState({
+        isRunning: true,
+        seconds: 0,
+        projectId: resolvedProjectId,
+        taskId: taskId,
+        notes: ''
+      });
+      if (targetTask) {
+        showToast(`Switched tracking to "${targetTask.title}"`, 'info');
+      }
+      return;
+    }
+
     setTimerState(prev => ({
       ...prev,
       projectId: resolvedProjectId || prev.projectId,
