@@ -18,8 +18,7 @@ import {
   UserCheck,
   Lock,
   Trash2,
-  Pencil,
-  Monitor
+  Pencil
 } from 'lucide-react';
 import { EditTaskModal } from './Modals';
 
@@ -308,17 +307,6 @@ export function TasksView({ onOpenNewTask }) {
                             {project ? `${project.code} • ${project.title}` : 'Studio Task'}
                           </div>
                         </div>
-
-                        {/* Screen Specs / Canvas Resolution */}
-                        {(task.screenSpecs || task.deliverableSpec) && (
-                          <div
-                            className="px-2 py-1.5 rounded-lg dark:bg-[#0d1117] bg-slate-50 border dark:border-[#21262d] border-slate-200 text-[10px] text-slate-400 font-mono flex items-center gap-1.5"
-                            title={`Screen Specs / Canvas Resolution: ${task.screenSpecs || task.deliverableSpec}`}
-                          >
-                            <Monitor size={11} className="text-[#E5252A] flex-shrink-0" />
-                            <span className="truncate">{task.screenSpecs || task.deliverableSpec}</span>
-                          </div>
-                        )}
 
                         {/* Task Description */}
                         {task.description && (

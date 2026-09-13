@@ -717,28 +717,6 @@ export function NewTaskModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Screen Specs / Canvas Resolution */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="font-bold text-slate-600 dark:text-slate-300">
-                Screen Specs / Canvas Resolution *
-              </label>
-              {selectedProj?.screenSpecs && (
-                <span className="text-[10px] text-slate-400">
-                  Project default: <strong className="font-mono text-slate-300">{selectedProj.screenSpecs}</strong>
-                </span>
-              )}
-            </div>
-            <input
-              required
-              type="text"
-              placeholder="e.g. 7680 x 1080 Ultra-wide LED"
-              value={formData.screenSpecs}
-              onChange={e => setFormData({ ...formData, screenSpecs: e.target.value, deliverableSpec: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 font-mono"
-            />
-          </div>
-
           {/* Task Description */}
           <div className="space-y-1">
             <label className="font-bold text-slate-600 dark:text-slate-300">Task Description</label>
@@ -934,28 +912,6 @@ export function EditTaskModal({ isOpen, onClose, task }) {
                 className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
               />
             </div>
-          </div>
-
-          {/* Screen Specs / Canvas Resolution */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="font-bold text-slate-600 dark:text-slate-300">
-                Screen Specs / Canvas Resolution *
-              </label>
-              {selectedProj?.screenSpecs && (
-                <span className="text-[10px] text-slate-400">
-                  Project default: <strong className="font-mono text-slate-300">{selectedProj.screenSpecs}</strong>
-                </span>
-              )}
-            </div>
-            <input
-              required
-              type="text"
-              placeholder="e.g. 7680 x 1080 Ultra-wide LED"
-              value={formData.screenSpecs}
-              onChange={e => setFormData({ ...formData, screenSpecs: e.target.value, deliverableSpec: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 font-mono"
-            />
           </div>
 
           {/* Task Description */}
