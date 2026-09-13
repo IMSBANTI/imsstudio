@@ -555,29 +555,51 @@ export function NewProjectModal({ isOpen, onClose }) {
 }
 
 // --- 4. New Task Modal ---
+// --- 4. Assign New Task Modal ---
 export function NewTaskModal({ isOpen, onClose }) {
   const { data, addTask } = useStudio();
 
+  const firstProj = data.projects[0];
   const [formData, setFormData] = useState({
     title: '',
-    projectId: data.projects[0]?.id || '',
+    projectId: firstProj?.id || '',
     assigneeId: data.members[0]?.id || '',
     status: 'Pending',
     priority: 'High',
     dueDate: new Date().toISOString().slice(0, 10),
     estimatedHours: 20,
-    deliverableSpec: '3840x2160 60fps ProRes 4444',
+    screenSpecs: firstProj?.screenSpecs || '7680 x 1080 Ultra-wide LED',
+    deliverableSpec: firstProj?.screenSpecs || '7680 x 1080 Ultra-wide LED',
+    description: '',
     revisionNotes: ''
   });
 
+  React.useEffect(() => {
+    if (data.projects.length > 0 && !formData.projectId) {
+      const p = data.projects[0];
+      setFormData(prev => ({
+        ...prev,
+        projectId: p.id,
+        screenSpecs: p.screenSpecs || prev.screenSpecs,
+        deliverableSpec: p.screenSpecs || prev.deliverableSpec
+      }));
+    }
+  }, [data.projects, isOpen]);
+
   if (!isOpen) return null;
+
+  const selectedProj = data.projects.find(p => p.id === formData.projectId);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const proj = data.projects.find(p => p.id === formData.projectId);
     const member = data.members.find(m => m.id === formData.assigneeId);
+    const resolvedSpecs = formData.screenSpecs || formData.deliverableSpec || proj?.screenSpecs || '7680 x 1080 Ultra-wide LED';
     addTask({
       ...formData,
+      screenSpecs: resolvedSpecs,
+      deliverableSpec: resolvedSpecs,
+      description: formData.description || '',
       projectTitle: proj ? proj.title : 'Studio Project',
       assigneeName: member ? member.name : 'Artist',
       assigneeRole: member ? member.roleTitle : 'Visualizer',
@@ -596,7 +618,7 @@ export function NewTaskModal({ isOpen, onClose }) {
             </div>
             <div>
               <h2 className="text-base font-extrabold dark:text-white text-slate-900">Assign Studio Task</h2>
-              <p className="text-xs text-slate-400">Allocate visualizer and specify technical output format</p>
+              <p className="text-xs text-slate-400">Allocate visualizer, specify canvas specs, and outline task details</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer">
@@ -622,7 +644,16 @@ export function NewTaskModal({ isOpen, onClose }) {
               <label className="font-bold text-slate-600 dark:text-slate-300">Studio Project *</label>
               <select
                 value={formData.projectId}
-                onChange={e => setFormData({ ...formData, projectId: e.target.value })}
+                onChange={e => {
+                  const newProjId = e.target.value;
+                  const p = data.projects.find(proj => proj.id === newProjId);
+                  setFormData(prev => ({
+                    ...prev,
+                    projectId: newProjId,
+                    screenSpecs: p?.screenSpecs || prev.screenSpecs,
+                    deliverableSpec: p?.screenSpecs || prev.deliverableSpec
+                  }));
+                }}
                 className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
               >
                 {data.projects.map(p => (
@@ -686,14 +717,37 @@ export function NewTaskModal({ isOpen, onClose }) {
             </div>
           </div>
 
+          {/* Screen Specs / Canvas Resolution */}
           <div className="space-y-1">
-            <label className="font-bold text-slate-600 dark:text-slate-300">Deliverable Spec</label>
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-slate-600 dark:text-slate-300">
+                Screen Specs / Canvas Resolution *
+              </label>
+              {selectedProj?.screenSpecs && (
+                <span className="text-[10px] text-slate-400">
+                  Project default: <strong className="font-mono text-slate-300">{selectedProj.screenSpecs}</strong>
+                </span>
+              )}
+            </div>
             <input
+              required
               type="text"
-              placeholder="e.g. 3840x2160 60fps ProRes 4444"
-              value={formData.deliverableSpec}
-              onChange={e => setFormData({ ...formData, deliverableSpec: e.target.value })}
+              placeholder="e.g. 7680 x 1080 Ultra-wide LED"
+              value={formData.screenSpecs}
+              onChange={e => setFormData({ ...formData, screenSpecs: e.target.value, deliverableSpec: e.target.value })}
               className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 font-mono"
+            />
+          </div>
+
+          {/* Task Description */}
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Task Description</label>
+            <textarea
+              rows={3}
+              placeholder="Describe the task details, visualizer notes, creative references, and execution requirements..."
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 resize-none leading-relaxed"
             />
           </div>
 
@@ -710,6 +764,238 @@ export function NewTaskModal({ isOpen, onClose }) {
               className="px-5 py-2 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white font-bold transition-all shadow-md shadow-red-900/20 cursor-pointer"
             >
               Assign Task
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// --- Edit Task Modal ---
+export function EditTaskModal({ isOpen, onClose, task }) {
+  const { data, updateTask } = useStudio();
+
+  const [formData, setFormData] = useState({
+    title: '',
+    projectId: '',
+    assigneeId: '',
+    status: 'Pending',
+    priority: 'High',
+    dueDate: '',
+    screenSpecs: '',
+    deliverableSpec: '',
+    description: '',
+    revisionNotes: ''
+  });
+
+  React.useEffect(() => {
+    if (task) {
+      setFormData({
+        title: task.title || '',
+        projectId: task.projectId || data.projects[0]?.id || '',
+        assigneeId: task.assigneeId || data.members[0]?.id || '',
+        status: task.status || 'Pending',
+        priority: task.priority || 'High',
+        dueDate: task.dueDate || new Date().toISOString().slice(0, 10),
+        screenSpecs: task.screenSpecs || task.deliverableSpec || '7680 x 1080 Ultra-wide LED',
+        deliverableSpec: task.screenSpecs || task.deliverableSpec || '7680 x 1080 Ultra-wide LED',
+        description: task.description || '',
+        revisionNotes: task.revisionNotes || ''
+      });
+    }
+  }, [task, data.projects, data.members, isOpen]);
+
+  if (!isOpen || !task) return null;
+
+  const selectedProj = data.projects.find(p => p.id === formData.projectId);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const proj = data.projects.find(p => p.id === formData.projectId);
+    const member = data.members.find(m => m.id === formData.assigneeId);
+    const resolvedSpecs = formData.screenSpecs || formData.deliverableSpec || proj?.screenSpecs || '7680 x 1080 Ultra-wide LED';
+    updateTask(task.id, {
+      ...formData,
+      screenSpecs: resolvedSpecs,
+      deliverableSpec: resolvedSpecs,
+      description: formData.description || '',
+      projectTitle: proj ? proj.title : task.projectTitle,
+      assigneeName: member ? member.name : task.assigneeName,
+      assigneeRole: member ? member.roleTitle : task.assigneeRole,
+      departmentId: member ? member.departmentId : task.departmentId
+    });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-lg rounded-2xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 shadow-2xl p-6 space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b dark:border-[#21262d] border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-[#E5252A]/10 text-[#E5252A]">
+              <CheckSquare size={20} />
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold dark:text-white text-slate-900">Edit Task</h2>
+              <p className="text-xs text-slate-400">Update task details, instructions, and canvas resolution</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Task Title *</label>
+            <input
+              required
+              type="text"
+              value={formData.title}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Studio Project *</label>
+              <select
+                value={formData.projectId}
+                onChange={e => {
+                  const newProjId = e.target.value;
+                  const p = data.projects.find(proj => proj.id === newProjId);
+                  setFormData(prev => ({
+                    ...prev,
+                    projectId: newProjId,
+                    screenSpecs: p?.screenSpecs || prev.screenSpecs,
+                    deliverableSpec: p?.screenSpecs || prev.deliverableSpec
+                  }));
+                }}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              >
+                {data.projects.map(p => (
+                  <option key={p.id} value={p.id}>{p.code}: {p.title}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Assignee (Visualizer) *</label>
+              <select
+                value={formData.assigneeId}
+                onChange={e => setFormData({ ...formData, assigneeId: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              >
+                {data.members.filter(m => m.departmentId !== 'dept-bd').map(m => (
+                  <option key={m.id} value={m.id}>{m.name} ({m.departmentName})</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Status</label>
+              <select
+                value={formData.status}
+                onChange={e => setFormData({ ...formData, status: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              >
+                <option value="Pending">Pending</option>
+                <option value="Ongoing">Ongoing</option>
+                <option value="Revision">Revision</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Priority</label>
+              <select
+                value={formData.priority}
+                onChange={e => setFormData({ ...formData, priority: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              >
+                <option value="Urgent">Urgent</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Due Date</label>
+              <input
+                type="date"
+                value={formData.dueDate}
+                onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              />
+            </div>
+          </div>
+
+          {/* Screen Specs / Canvas Resolution */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-slate-600 dark:text-slate-300">
+                Screen Specs / Canvas Resolution *
+              </label>
+              {selectedProj?.screenSpecs && (
+                <span className="text-[10px] text-slate-400">
+                  Project default: <strong className="font-mono text-slate-300">{selectedProj.screenSpecs}</strong>
+                </span>
+              )}
+            </div>
+            <input
+              required
+              type="text"
+              placeholder="e.g. 7680 x 1080 Ultra-wide LED"
+              value={formData.screenSpecs}
+              onChange={e => setFormData({ ...formData, screenSpecs: e.target.value, deliverableSpec: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 font-mono"
+            />
+          </div>
+
+          {/* Task Description */}
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Task Description</label>
+            <textarea
+              rows={3}
+              placeholder="Describe the task details, visualizer notes, creative references, and execution requirements..."
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 resize-none leading-relaxed"
+            />
+          </div>
+
+          {formData.status === 'Revision' && (
+            <div className="space-y-1">
+              <label className="font-bold text-amber-500">Revision Feedback Notes</label>
+              <textarea
+                rows={2}
+                placeholder="What changes or revisions does the client need on this deliverable?"
+                value={formData.revisionNotes}
+                onChange={e => setFormData({ ...formData, revisionNotes: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl bg-amber-500/5 border border-amber-500/30 text-amber-300 text-xs resize-none"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t dark:border-[#21262d] border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white font-bold transition-all shadow-md shadow-red-900/20 cursor-pointer"
+            >
+              Save Changes
             </button>
           </div>
         </form>

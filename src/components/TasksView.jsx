@@ -17,12 +17,16 @@ import {
   CheckCircle,
   UserCheck,
   Lock,
-  Trash2
+  Trash2,
+  Pencil,
+  Monitor
 } from 'lucide-react';
+import { EditTaskModal } from './Modals';
 
 export function TasksView({ onOpenNewTask }) {
   const { data, updateTask, deleteTask, startTimer, currentUser, isManager, isAdmin } = useStudio();
 
+  const [editingTask, setEditingTask] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState('All');
   const [selectedAssignee, setSelectedAssignee] = useState('All');
@@ -36,6 +40,8 @@ export function TasksView({ onOpenNewTask }) {
     return data.tasks.filter(task => {
       const matchesSearch =
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.screenSpecs?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.projectTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.assigneeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.deliverableSpec?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -269,17 +275,26 @@ export function TasksView({ onOpenNewTask }) {
                               </span>
                             )}
                             {isManager && (
-                              <button
-                                onClick={() => {
-                                  if (confirm(`Delete task "${task.title}"?`)) {
-                                    deleteTask(task.id);
-                                  }
-                                }}
-                                title="Delete Task"
-                                className="p-1 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer ml-1"
-                              >
-                                <Trash2 size={12} />
-                              </button>
+                              <div className="flex items-center gap-0.5 ml-1">
+                                <button
+                                  onClick={() => setEditingTask(task)}
+                                  title="Edit Task & Canvas Specs"
+                                  className="p-1 rounded text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors cursor-pointer"
+                                >
+                                  <Pencil size={12} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`Delete task "${task.title}"?`)) {
+                                      deleteTask(task.id);
+                                    }
+                                  }}
+                                  title="Delete Task"
+                                  className="p-1 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -294,10 +309,21 @@ export function TasksView({ onOpenNewTask }) {
                           </div>
                         </div>
 
-                        {/* Deliverable spec */}
-                        {task.deliverableSpec && (
-                          <div className="p-2 rounded-lg dark:bg-[#0d1117] bg-slate-50 border dark:border-[#21262d] border-slate-200 text-[10px] text-slate-400 font-mono truncate" title={task.deliverableSpec}>
-                            {task.deliverableSpec}
+                        {/* Screen Specs / Canvas Resolution */}
+                        {(task.screenSpecs || task.deliverableSpec) && (
+                          <div
+                            className="px-2 py-1.5 rounded-lg dark:bg-[#0d1117] bg-slate-50 border dark:border-[#21262d] border-slate-200 text-[10px] text-slate-400 font-mono flex items-center gap-1.5"
+                            title={`Screen Specs / Canvas Resolution: ${task.screenSpecs || task.deliverableSpec}`}
+                          >
+                            <Monitor size={11} className="text-[#E5252A] flex-shrink-0" />
+                            <span className="truncate">{task.screenSpecs || task.deliverableSpec}</span>
+                          </div>
+                        )}
+
+                        {/* Task Description */}
+                        {task.description && (
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed bg-slate-50/60 dark:bg-[#12161d] p-2 rounded-lg border dark:border-[#21262d] border-slate-100">
+                            {task.description}
                           </div>
                         )}
 
@@ -359,6 +385,13 @@ export function TasksView({ onOpenNewTask }) {
           );
         })}
       </div>
+
+      {/* Edit Task Modal */}
+      <EditTaskModal
+        isOpen={!!editingTask}
+        task={editingTask}
+        onClose={() => setEditingTask(null)}
+      />
 
     </div>
   );
