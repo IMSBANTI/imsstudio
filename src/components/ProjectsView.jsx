@@ -312,11 +312,11 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
                             </div>
                           </div>
 
-                          {/* Task Description / Screen Specs */}
+                          {/* Project Details / Screen Specs */}
                           {proj.description ? (
                             <div className="p-2 rounded-lg dark:bg-[#0d1117] bg-slate-50 border dark:border-[#21262d] border-slate-200 text-[11px] space-y-1">
                               <div className="text-slate-400 text-[9px] uppercase font-bold flex items-center gap-1">
-                                <Sparkles size={11} className="text-[#E5252A]" /> Task Description
+                                <Sparkles size={11} className="text-[#E5252A]" /> Project Details
                               </div>
                               <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed" title={proj.description}>
                                 {proj.description}
@@ -405,7 +405,7 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
                   <th className="py-3 px-4">Code & Project</th>
                   <th className="py-3 px-4">Client & Venue</th>
                   <th className="py-3 px-4">Dept</th>
-                  <th className="py-3 px-4">Task Description / Specs</th>
+                  <th className="py-3 px-4">Project Details / Specs</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Event Date</th>
                   <th className="py-3 px-4">Studio Hours</th>

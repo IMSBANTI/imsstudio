@@ -247,11 +247,29 @@ export function HandoverToStudioModal({ isOpen, onClose, brief }) {
     description: brief?.notes || ''
   });
 
+  React.useEffect(() => {
+    if (brief) {
+      setFormData(prev => ({
+        ...prev,
+        title: brief.projectTitle || prev.title,
+        department: brief.targetDepartment || prev.department,
+        eventDate: brief.eventDate || prev.eventDate,
+        loadInDate: brief.eventDate || prev.loadInDate,
+        description: brief.notes || prev.description || ''
+      }));
+    }
+  }, [brief]);
+
   if (!isOpen || !brief) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await handoverBrief(brief.id, formData);
+    await handoverBrief(brief.id, {
+      ...formData,
+      screenSpecs: formData.screenSpecs || 'Standard LED Wall',
+      mediaServerFormat: formData.mediaServerFormat || 'ProRes 4444',
+      frameRate: formData.frameRate || '60 fps'
+    });
     onClose();
   };
 
@@ -336,41 +354,14 @@ export function HandoverToStudioModal({ isOpen, onClose, brief }) {
           </div>
 
           <div className="space-y-1">
-            <label className="font-bold text-slate-600 dark:text-slate-300">Screen Resolution & Physical Canvas Specs *</label>
-            <input
-              required
-              type="text"
-              placeholder="e.g. 11520 x 2160 (Curved Main LED) + 3840x2160 Hologram"
-              value={formData.screenSpecs}
-              onChange={e => setFormData({ ...formData, screenSpecs: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 font-mono"
+            <label className="font-bold text-slate-600 dark:text-slate-300">Project Details</label>
+            <textarea
+              rows={4}
+              placeholder="Enter comprehensive project details, creative directives, stage setup notes, or deliverables..."
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 resize-none leading-relaxed"
             />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="font-bold text-slate-600 dark:text-slate-300">Media Server / Master Codec</label>
-              <input
-                type="text"
-                placeholder="e.g. ProRes 4444 / Notch / Unreal Engine"
-                value={formData.mediaServerFormat}
-                onChange={e => setFormData({ ...formData, mediaServerFormat: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-bold text-slate-600 dark:text-slate-300">Frame Rate</label>
-              <select
-                value={formData.frameRate}
-                onChange={e => setFormData({ ...formData, frameRate: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
-              >
-                <option value="60 fps">60 fps (Smooth Experiential)</option>
-                <option value="30 fps">30 fps</option>
-                <option value="120 fps">120 fps (Ultra High Refresh)</option>
-              </select>
-            </div>
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t dark:border-[#21262d] border-slate-100">
@@ -525,10 +516,10 @@ export function NewProjectModal({ isOpen, onClose }) {
           </div>
 
           <div className="space-y-1">
-            <label className="font-bold text-slate-600 dark:text-slate-300">Task Description</label>
+            <label className="font-bold text-slate-600 dark:text-slate-300">Project Details</label>
             <textarea
               rows={3}
-              placeholder="Describe the project tasks, visualizer directives, or deliverables..."
+              placeholder="Enter comprehensive project details, creative directives, or deliverables..."
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 resize-none leading-relaxed"
