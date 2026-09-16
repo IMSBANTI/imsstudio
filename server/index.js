@@ -208,6 +208,9 @@ if (process.env.DATABASE_URL) {
 
 function normalizeMemberRoleType(m) {
   if (!m) return m;
+  if (m.name && typeof m.name === 'string') {
+    m.name = m.name.trim();
+  }
   const title = (m.roleTitle || '').toLowerCase();
   const roleId = (m.roleId || '').toLowerCase();
   const deptId = (m.departmentId || '').toLowerCase();

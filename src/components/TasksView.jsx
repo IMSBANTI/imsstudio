@@ -325,18 +325,22 @@ export function TasksView({ onOpenNewTask }) {
 
                         {/* Assignee & Timer Trigger */}
                         <div className="flex items-center justify-between pt-2 border-t dark:border-[#21262d] border-slate-100 text-xs">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 min-w-0 pr-2">
                             {assignee ? (
                               <>
                                 <img
                                   src={assignee.avatar}
                                   alt={assignee.name}
-                                  className="w-5 h-5 rounded-full object-cover border"
+                                  className="w-5 h-5 rounded-full object-cover border flex-shrink-0"
                                 />
-                                <span className="text-[11px] font-semibold dark:text-slate-300 text-slate-700 truncate max-w-[90px]">
-                                  {assignee.name.split(' ')[0]}
+                                <span className="text-[11px] font-semibold dark:text-slate-300 text-slate-700 truncate max-w-[110px]" title={assignee.name?.trim()}>
+                                  {assignee.name?.trim()}
                                 </span>
                               </>
+                            ) : task.assigneeName ? (
+                              <span className="text-[11px] font-semibold dark:text-slate-300 text-slate-700 truncate max-w-[110px]" title={task.assigneeName.trim()}>
+                                {task.assigneeName.trim()}
+                              </span>
                             ) : (
                               <span className="text-slate-400 text-[11px]">Unassigned</span>
                             )}
