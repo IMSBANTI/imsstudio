@@ -253,6 +253,11 @@ export const api = {
     return res.json();
   },
 
+  async deleteDepartment(id) {
+    const res = await fetch(`${API_BASE}/departments/${id}`, { method: 'DELETE' });
+    return res.json();
+  },
+
   async createRole(role) {
     const res = await fetch(`${API_BASE}/roles`, {
       method: 'POST',

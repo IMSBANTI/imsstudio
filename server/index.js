@@ -825,6 +825,7 @@ app.put('/api/departments/:id', (req, res) => {
 
 app.delete('/api/departments/:id', (req, res) => {
   db.departments = db.departments.filter(d => d.id !== req.params.id);
+  db.roles = (db.roles || []).filter(r => r.departmentId !== req.params.id);
   saveDatabase(db);
   res.json({ success: true });
 });

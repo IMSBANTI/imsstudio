@@ -26,7 +26,7 @@ import {
 import { EditRoleModal, EditMemberModal } from './Modals';
 
 export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, onOpenAdminResetPassword }) {
-  const { data, deleteMember, clearSampleMembers, isAdmin, isManager, currentUser } = useStudio();
+  const { data, deleteMember, deleteDepartment, deleteRole, clearSampleMembers, isAdmin, isManager, currentUser } = useStudio();
   const [selectedDeptFilter, setSelectedDeptFilter] = useState('All');
   const [editingRole, setEditingRole] = useState(null);
   const [editingMember, setEditingMember] = useState(null);
@@ -134,9 +134,27 @@ export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, o
                         {dept.name}
                       </h3>
                     </div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded dark:bg-[#21262d] bg-slate-100 text-slate-500 dark:text-slate-300">
-                      {dept.code}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded dark:bg-[#21262d] bg-slate-100 text-slate-500 dark:text-slate-300">
+                        {dept.code}
+                      </span>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const membersInDept = data.members.filter(m => m.departmentId === dept.id);
+                            if (membersInDept.length > 0) {
+                              if (!confirm(`Department "${dept.name}" currently has ${membersInDept.length} member(s). Delete department anyway?`)) return;
+                            } else if (!confirm(`Delete department "${dept.name}"?`)) return;
+                            deleteDepartment(dept.id);
+                          }}
+                          className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded hover:bg-rose-500/10 cursor-pointer"
+                          title="Delete department"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">
@@ -165,17 +183,32 @@ export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, o
                           <span className="font-mono font-bold text-emerald-500 text-[10px]">{formatBDT(r.hourlyRateBDT || 1500)}/h</span>
                           <span className="text-slate-400 text-[10px]">{r.level}</span>
                           {isAdmin && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingRole(r);
-                              }}
-                              className="text-slate-400 hover:text-[#E5252A] p-0.5 opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer"
-                              title="Edit role pricing"
-                            >
-                              <Edit2 size={12} />
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingRole(r);
+                                }}
+                                className="text-slate-400 hover:text-[#E5252A] p-0.5 opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                title="Edit role pricing"
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm(`Delete role "${r.title}"?`)) {
+                                    deleteRole(r.id);
+                                  }
+                                }}
+                                className="text-slate-400 hover:text-rose-500 p-0.5 opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                title="Delete role"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </>
                           )}
                         </div>
                       </div>
@@ -289,7 +322,7 @@ export function TeamAdminView({ onOpenNewMember, onOpenNewDept, onOpenNewRole, o
                           >
                             <Edit2 size={13} />
                           </button>
-                          {member.roleType !== 'admin' && (
+                          {member.id !== currentUser?.id && (
                             <>
                               <button
                                 type="button"

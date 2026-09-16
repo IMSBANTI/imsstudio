@@ -594,6 +594,29 @@ export function StudioProvider({ children }) {
     }
   };
 
+  const deleteDepartment = async (id) => {
+    if (!isAdmin) {
+      showToast('Permission Denied: Only Admins can delete departments', 'error');
+      return false;
+    }
+    const dept = data.departments.find(d => d.id === id);
+    try {
+      await api.deleteDepartment(id);
+      await refreshData();
+      showToast(`Department '${dept?.name || 'Department'}' deleted`, 'info');
+      return true;
+    } catch (e) {
+      setData(prev => ({
+        ...prev,
+        departments: (prev.departments || []).filter(d => d.id !== id),
+        roles: (prev.roles || []).filter(r => r.departmentId !== id)
+      }));
+      showToast('Department removed locally', 'info');
+      return true;
+    }
+  };
+
+
   const addRole = async (roleData) => {
     if (!isAdmin) {
       showToast('Permission Denied: Only Admins can create roles', 'error');
@@ -802,6 +825,7 @@ export function StudioProvider({ children }) {
         updateMember,
         deleteMember,
         addDepartment,
+        deleteDepartment,
         addRole,
         updateRole,
         deleteRole,
