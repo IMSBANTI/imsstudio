@@ -367,7 +367,12 @@ export function TasksView({ onOpenNewTask }) {
                             </button>
                           ) : (
                             <button
-                              onClick={() => startTimer(task.projectId, task.id)}
+                              onClick={() => {
+                                if (task.status === 'Pending') {
+                                  handleStatusChange(task.id, 'Ongoing');
+                                }
+                                startTimer(task.projectId, task.id);
+                              }}
                               title="Start Stopwatch for this Task"
                               className="flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-[#E5252A]/10 hover:bg-[#E5252A] text-[#E5252A] hover:text-white font-bold transition-all cursor-pointer"
                             >

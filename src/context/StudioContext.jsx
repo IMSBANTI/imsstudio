@@ -476,6 +476,32 @@ export function StudioProvider({ children }) {
   };
 
   const updateTask = async (id, updates) => {
+    const prevTask = data.tasks.find(t => t.id === id);
+
+    // Auto-Timer Automation: Start on Ongoing/Revision, Stop & Log on Completed
+    if (updates.status && prevTask) {
+      const newStatus = updates.status;
+      const shouldAutoStart = !prevTask.assigneeId || prevTask.assigneeId === currentUser?.id || isAdmin;
+
+      if ((newStatus === 'Ongoing' || newStatus === 'Revision') && shouldAutoStart) {
+        if (!timerState.isRunning || timerState.taskId !== id) {
+          startTimer(prevTask.projectId, id);
+        }
+      } else if (newStatus === 'Completed' || newStatus === 'Delivered') {
+        if (timerState.taskId === id) {
+          if (timerState.seconds >= 5) {
+            await stopAndSaveTimer(`Auto-logged upon completing task "${prevTask.title}"`);
+          } else {
+            resetTimer();
+          }
+        }
+      } else if (newStatus === 'Pending') {
+        if (timerState.taskId === id && timerState.isRunning) {
+          pauseTimer();
+        }
+      }
+    }
+
     try {
       await api.updateTask(id, {
         ...updates,
