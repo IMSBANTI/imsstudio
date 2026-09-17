@@ -19,14 +19,16 @@ import {
   UserCheck,
   Lock,
   Trash2,
-  Pencil
+  Pencil,
+  UserPlus
 } from 'lucide-react';
-import { EditTaskModal, getProductionVisualizers } from './Modals';
+import { EditTaskModal, AddCollaboratorModal, getProductionVisualizers } from './Modals';
 
 export function TasksView({ onOpenNewTask }) {
   const { data, updateTask, deleteTask, startTimer, pauseTimer, timerState, currentUser, isManager, isAdmin } = useStudio();
 
   const [editingTask, setEditingTask] = useState(null);
+  const [collaboratingTask, setCollaboratingTask] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState('All');
   const [selectedAssignee, setSelectedAssignee] = useState('All');
@@ -277,6 +279,13 @@ export function TasksView({ onOpenNewTask }) {
                             {isManager && (
                               <div className="flex items-center gap-0.5 ml-1">
                                 <button
+                                  onClick={() => setCollaboratingTask(task)}
+                                  title="Add another visualizer to collaborate on this task"
+                                  className="p-1 rounded text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                                >
+                                  <UserPlus size={12} />
+                                </button>
+                                <button
                                   onClick={() => setEditingTask(task)}
                                   title="Edit Task & Canvas Specs"
                                   className="p-1 rounded text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors cursor-pointer"
@@ -395,6 +404,13 @@ export function TasksView({ onOpenNewTask }) {
         isOpen={!!editingTask}
         task={editingTask}
         onClose={() => setEditingTask(null)}
+      />
+
+      {/* Add Collaborator Modal */}
+      <AddCollaboratorModal
+        isOpen={!!collaboratingTask}
+        task={collaboratingTask}
+        onClose={() => setCollaboratingTask(null)}
       />
 
     </div>

@@ -1334,6 +1334,125 @@ export function EditTaskModal({ isOpen, onClose, task }) {
   );
 }
 
+// --- 4.5 Add Collaborator to Running Task Modal ---
+export function AddCollaboratorModal({ isOpen, onClose, task }) {
+  const { data, addTask } = useStudio();
+  const visualizers = getProductionVisualizers(data.members, data.departments)
+    .filter(m => m.id !== task?.assigneeId);
+  const [selectedMemberId, setSelectedMemberId] = useState('');
+
+  React.useEffect(() => {
+    if (visualizers.length > 0) {
+      setSelectedMemberId(visualizers[0].id);
+    }
+  }, [isOpen, task]);
+
+  if (!isOpen || !task) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const member = data.members.find(m => m.id === selectedMemberId);
+    if (!member) return;
+
+    addTask({
+      title: task.title,
+      projectId: task.projectId,
+      projectTitle: task.projectTitle,
+      screenSpecs: task.screenSpecs || task.deliverableSpec || '7680 x 1080 Ultra-wide LED',
+      deliverableSpec: task.deliverableSpec || task.screenSpecs || '7680 x 1080 Ultra-wide LED',
+      status: task.status || 'Ongoing',
+      priority: task.priority || 'High',
+      dueDate: task.dueDate || new Date().toISOString().slice(0, 10),
+      estimatedHours: task.estimatedHours || 20,
+      description: task.description || '',
+      assigneeId: member.id,
+      assigneeName: member.name,
+      assigneeRole: member.roleTitle,
+      departmentId: member.departmentId
+    });
+    onClose();
+  };
+
+  const currentAssignee = data.members.find(m => m.id === task.assigneeId);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-md rounded-2xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 shadow-2xl p-6 space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b dark:border-[#21262d] border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+              <UserPlus size={20} />
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold dark:text-white text-slate-900">Add Collaborator</h2>
+              <p className="text-xs text-slate-400">Assign a co-visualizer to work on this task simultaneously</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {/* Task Info Summary */}
+          <div className="p-3 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#21262d] border-slate-200 space-y-1.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current Running Task</div>
+            <div className="font-bold dark:text-white text-slate-900 text-sm leading-snug">{task.title}</div>
+            <div className="text-slate-400 text-[11px] flex items-center gap-2 pt-1">
+              <span>Project: <strong className="dark:text-slate-200 text-slate-700">{task.projectTitle || 'Studio Project'}</strong></span>
+              <span>•</span>
+              <span>Status: <strong className="text-emerald-500 font-bold">{task.status}</strong></span>
+            </div>
+            {currentAssignee && (
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 pt-1 flex items-center gap-1.5">
+                <span>Currently assigned to:</span>
+                <span className="font-semibold dark:text-white text-slate-800">{currentAssignee.name}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="font-bold text-slate-600 dark:text-slate-300">
+              Select Co-Visualizer to Join *
+            </label>
+            <select
+              required
+              value={selectedMemberId}
+              onChange={e => setSelectedMemberId(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 text-xs cursor-pointer font-medium"
+            >
+              {visualizers.map(m => (
+                <option key={m.id} value={m.id}>
+                  {m.name} — {m.departmentName || m.roleTitle}
+                </option>
+              ))}
+            </select>
+            <p className="text-[11px] text-slate-400 leading-relaxed pt-1">
+              ✓ This creates a parallel active task for the selected visualizer under this project so both team members can punch in/out on their own stopwatches.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t dark:border-[#21262d] border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-md shadow-emerald-900/20 cursor-pointer flex items-center gap-1.5"
+            >
+              <UserPlus size={14} /> Add to Running Task
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // --- 5. Manual Log Time Modal ---
 export function LogTimeModal({ isOpen, onClose }) {
   const { data, addTimeLog, currentUser } = useStudio();
