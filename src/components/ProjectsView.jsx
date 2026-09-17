@@ -20,8 +20,10 @@ import {
   LayoutGrid,
   List,
   Banknote,
-  Trash2
+  Trash2,
+  Edit2
 } from 'lucide-react';
+import { EditProjectModal } from './Modals';
 
 export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
   const { data, updateProject, deleteProject, clearSampleWork, setActiveTab, startTimer, isManager, isAdmin } = useStudio();
@@ -30,6 +32,7 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
+  const [editingProject, setEditingProject] = useState(null);
 
   // Filtered projects
   const filteredProjects = useMemo(() => {
@@ -257,7 +260,9 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
                   ) : (
                     columnProjects.map(proj => {
                       const pctBudget = proj.budgetHours > 0 ? Math.min(100, Math.round((proj.loggedHours / proj.budgetHours) * 100)) : 0;
-                      const assignedMembers = data.members.filter(m => proj.assignedMemberIds?.includes(m.id));
+                      const projectTaskAssigneeIds = data.tasks.filter(t => t.projectId === proj.id && t.assigneeId).map(t => t.assigneeId);
+                      const allAssignedIds = new Set([...(proj.assignedMemberIds || []), ...projectTaskAssigneeIds]);
+                      const assignedMembers = data.members.filter(m => allAssignedIds.has(m.id));
                       const projBudgetBDT = proj.budgetAmountBDT || (proj.budgetHours ? proj.budgetHours * 1500 : 0);
                       const projDeliveredBDT = data.timelogs
                         .filter(l => l.projectId === proj.id)
@@ -275,6 +280,19 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
                               <span className="text-[10px] px-1.5 py-0.2 rounded font-semibold dark:bg-[#21262d] bg-slate-100 dark:text-slate-300 text-slate-600">
                                 {proj.department}
                               </span>
+                              {isManager && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingProject(proj);
+                                  }}
+                                  className="text-slate-400 hover:text-blue-400 transition-colors p-0.5 cursor-pointer"
+                                  title="Edit Project & Team"
+                                >
+                                  <Edit2 size={12} />
+                                </button>
+                              )}
                               {isAdmin && (
                                 <button
                                   type="button"
@@ -476,6 +494,16 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
                           >
                             Tasks &rarr;
                           </button>
+                          {isManager && (
+                            <button
+                              type="button"
+                              onClick={() => setEditingProject(proj)}
+                              className="text-slate-400 hover:text-blue-400 transition-colors p-1 cursor-pointer"
+                              title="Edit Project & Team"
+                            >
+                              <Edit2 size={13} />
+                            </button>
+                          )}
                           {isAdmin && (
                             <button
                               type="button"
@@ -500,6 +528,13 @@ export function ProjectsView({ onOpenNewProject, onOpenNewTask }) {
           </div>
         </div>
       )}
+
+      {/* Edit Project Modal */}
+      <EditProjectModal
+        isOpen={!!editingProject}
+        onClose={() => setEditingProject(null)}
+        project={editingProject}
+      />
 
     </div>
   );

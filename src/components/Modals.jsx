@@ -407,13 +407,21 @@ export function NewProjectModal({ isOpen, onClose }) {
     leadVisualizerId: data.members[0]?.id || '',
     description: ''
   });
+  const [assignedMemberIds, setAssignedMemberIds] = useState([]);
 
   if (!isOpen) return null;
+
+  const toggleMember = (id) => {
+    setAssignedMemberIds(prev =>
+      prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
+    );
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     addProject({
       ...formData,
+      assignedMemberIds,
       screenSpecs: formData.screenSpecs || 'Standard LED Wall'
     });
     onClose();
@@ -466,15 +474,16 @@ export function NewProjectModal({ isOpen, onClose }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="space-y-1">
-              <label className="font-bold text-slate-600 dark:text-slate-300">Department</label>
+              <label className="font-bold text-slate-600 dark:text-slate-300">Target Department</label>
               <select
                 value={formData.department}
                 onChange={e => setFormData({ ...formData, department: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
               >
-                <option value="2D Team">2D Team</option>
                 <option value="3D Team">3D Team</option>
+                <option value="2D Team">2D Team</option>
                 <option value="Hybrid 2D+3D">Hybrid 2D+3D</option>
+                <option value="Interactive Tech">Interactive Tech</option>
               </select>
             </div>
 
@@ -515,6 +524,58 @@ export function NewProjectModal({ isOpen, onClose }) {
             </div>
           </div>
 
+          {/* Multi-member assignment for the Project */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-slate-600 dark:text-slate-300">
+                Assigned Team Members ({assignedMemberIds.length} selected)
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAssignedMemberIds(data.members.map(m => m.id))}
+                  className="text-[10px] text-[#E5252A] hover:underline font-bold cursor-pointer"
+                >
+                  Select All
+                </button>
+                <span className="text-slate-400 text-[10px]">•</span>
+                <button
+                  type="button"
+                  onClick={() => setAssignedMemberIds([])}
+                  className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200">
+              {data.members.map(m => {
+                const isSelected = assignedMemberIds.includes(m.id);
+                return (
+                  <div
+                    key={m.id}
+                    onClick={() => toggleMember(m.id)}
+                    className={`flex items-center gap-2 p-1.5 rounded-lg border cursor-pointer select-none transition-all ${
+                      isSelected
+                        ? 'border-[#E5252A] bg-[#E5252A]/10 text-slate-900 dark:text-white shadow-xs'
+                        : 'border-transparent hover:bg-slate-200/50 dark:hover:bg-[#161b22] text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    <img
+                      src={m.avatar}
+                      alt={m.name}
+                      className="w-5 h-5 rounded-full object-cover border flex-shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] font-bold truncate">{m.name}</div>
+                      <div className="text-[9px] text-slate-400 truncate">{m.departmentName || m.roleTitle}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="space-y-1">
             <label className="font-bold text-slate-600 dark:text-slate-300">Project Details</label>
             <textarea
@@ -530,7 +591,7 @@ export function NewProjectModal({ isOpen, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              className="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
             >
               Cancel
             </button>
@@ -539,6 +600,239 @@ export function NewProjectModal({ isOpen, onClose }) {
               className="px-5 py-2 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white font-bold transition-all shadow-md shadow-red-900/20 cursor-pointer"
             >
               Save Project
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// --- 3.5 Edit Project Modal ---
+export function EditProjectModal({ isOpen, onClose, project }) {
+  const { data, updateProject } = useStudio();
+
+  const [formData, setFormData] = useState({
+    title: '',
+    client: '',
+    department: '3D Team',
+    status: 'Ongoing',
+    priority: 'High',
+    venue: '',
+    eventDate: '',
+    budgetHours: 100,
+    budgetAmountBDT: 200000,
+    description: '',
+    screenSpecs: ''
+  });
+  const [assignedMemberIds, setAssignedMemberIds] = useState([]);
+
+  React.useEffect(() => {
+    if (project) {
+      setFormData({
+        title: project.title || '',
+        client: project.client || '',
+        department: project.department || '3D Team',
+        status: project.status || 'Ongoing',
+        priority: project.priority || 'High',
+        venue: project.venue || '',
+        eventDate: project.eventDate || '',
+        budgetHours: project.budgetHours || 0,
+        budgetAmountBDT: project.budgetAmountBDT || 0,
+        description: project.description || '',
+        screenSpecs: project.screenSpecs || ''
+      });
+      const taskAssigneeIds = data.tasks.filter(t => t.projectId === project.id && t.assigneeId).map(t => t.assigneeId);
+      const combined = Array.from(new Set([...(project.assignedMemberIds || []), ...taskAssigneeIds]));
+      setAssignedMemberIds(combined);
+    }
+  }, [project, data.tasks]);
+
+  if (!isOpen || !project) return null;
+
+  const toggleMember = (id) => {
+    setAssignedMemberIds(prev =>
+      prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
+    );
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    updateProject(project.id, {
+      ...formData,
+      assignedMemberIds
+    });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl dark:bg-[#161b22] bg-white border dark:border-[#30363d] border-slate-200 shadow-2xl p-6 space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b dark:border-[#21262d] border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+              <Edit2 size={20} />
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold dark:text-white text-slate-900">Edit Project & Team Allocation</h2>
+              <p className="text-xs text-slate-400">{project.code}: Update project deliverables, budget, and assigned team members</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Project Title *</label>
+              <input
+                required
+                type="text"
+                value={formData.title}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Client Name *</label>
+              <input
+                required
+                type="text"
+                value={formData.client}
+                onChange={e => setFormData({ ...formData, client: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Target Department</label>
+              <select
+                value={formData.department}
+                onChange={e => setFormData({ ...formData, department: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              >
+                <option value="3D Team">3D Team</option>
+                <option value="2D Team">2D Team</option>
+                <option value="Hybrid 2D+3D">Hybrid 2D+3D</option>
+                <option value="Interactive Tech">Interactive Tech</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Status</label>
+              <select
+                value={formData.status}
+                onChange={e => setFormData({ ...formData, status: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+              >
+                <option value="Ongoing">Ongoing</option>
+                <option value="Revision">Revision</option>
+                <option value="Pending">Pending</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Budgeted Hours</label>
+              <input
+                type="number"
+                value={formData.budgetHours}
+                onChange={e => setFormData({ ...formData, budgetHours: Number(e.target.value) })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 font-mono"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-600 dark:text-slate-300">Contract Value (BDT ৳)</label>
+              <input
+                type="number"
+                step="10000"
+                value={formData.budgetAmountBDT}
+                onChange={e => setFormData({ ...formData, budgetAmountBDT: Number(e.target.value) })}
+                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 font-mono"
+              />
+            </div>
+          </div>
+
+          {/* Multi-member assignment for the Project */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-slate-600 dark:text-slate-300">
+                Assigned Team Members ({assignedMemberIds.length} selected)
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAssignedMemberIds(data.members.map(m => m.id))}
+                  className="text-[10px] text-[#E5252A] hover:underline font-bold cursor-pointer"
+                >
+                  Select All
+                </button>
+                <span className="text-slate-400 text-[10px]">•</span>
+                <button
+                  type="button"
+                  onClick={() => setAssignedMemberIds([])}
+                  className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200">
+              {data.members.map(m => {
+                const isSelected = assignedMemberIds.includes(m.id);
+                return (
+                  <div
+                    key={m.id}
+                    onClick={() => toggleMember(m.id)}
+                    className={`flex items-center gap-2 p-1.5 rounded-lg border cursor-pointer select-none transition-all ${
+                      isSelected
+                        ? 'border-[#E5252A] bg-[#E5252A]/10 text-slate-900 dark:text-white shadow-xs'
+                        : 'border-transparent hover:bg-slate-200/50 dark:hover:bg-[#161b22] text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    <img
+                      src={m.avatar}
+                      alt={m.name}
+                      className="w-5 h-5 rounded-full object-cover border flex-shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] font-bold truncate">{m.name}</div>
+                      <div className="text-[9px] text-slate-400 truncate">{m.departmentName || m.roleTitle}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Project Details</label>
+            <textarea
+              rows={3}
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900 resize-none leading-relaxed"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t dark:border-[#21262d] border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white font-bold transition-all shadow-md shadow-red-900/20 cursor-pointer"
+            >
+              Update Project
             </button>
           </div>
         </form>
@@ -556,7 +850,6 @@ export function NewTaskModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     title: '',
     projectId: firstProj?.id || '',
-    assigneeId: data.members[0]?.id || '',
     status: 'Pending',
     priority: 'High',
     dueDate: new Date().toISOString().slice(0, 10),
@@ -566,6 +859,15 @@ export function NewTaskModal({ isOpen, onClose }) {
     description: '',
     revisionNotes: ''
   });
+
+  const availableVisualizers = data.members.filter(m => m.departmentId !== 'dept-bd');
+  const [selectedAssigneeIds, setSelectedAssigneeIds] = useState([]);
+
+  React.useEffect(() => {
+    if (isOpen && availableVisualizers.length > 0 && selectedAssigneeIds.length === 0) {
+      setSelectedAssigneeIds([availableVisualizers[0].id]);
+    }
+  }, [isOpen, availableVisualizers]);
 
   React.useEffect(() => {
     if (isOpen && data.projects.length > 0) {
@@ -581,23 +883,42 @@ export function NewTaskModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
+  const toggleAssignee = (id) => {
+    setSelectedAssigneeIds(prev => {
+      if (prev.includes(id)) {
+        if (prev.length === 1) return prev; // keep at least 1
+        return prev.filter(mId => mId !== id);
+      }
+      return [...prev, id];
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const targetProjId = formData.projectId || data.projects[0]?.id || '';
     const proj = data.projects.find(p => p.id === targetProjId);
-    const member = data.members.find(m => m.id === formData.assigneeId) || data.members[0];
     const resolvedSpecs = formData.screenSpecs || formData.deliverableSpec || proj?.screenSpecs || '7680 x 1080 Ultra-wide LED';
-    addTask({
-      ...formData,
-      projectId: targetProjId,
-      screenSpecs: resolvedSpecs,
-      deliverableSpec: resolvedSpecs,
-      description: formData.description || '',
-      projectTitle: proj ? proj.title : 'Studio Project',
-      assigneeName: member ? member.name : 'Artist',
-      assigneeRole: member ? member.roleTitle : 'Visualizer',
-      departmentId: member ? member.departmentId : 'dept-3d'
+
+    const assignees = selectedAssigneeIds.length > 0
+      ? selectedAssigneeIds
+      : [availableVisualizers[0]?.id || data.members[0]?.id || ''];
+
+    assignees.forEach(assigneeId => {
+      const member = data.members.find(m => m.id === assigneeId);
+      addTask({
+        ...formData,
+        projectId: targetProjId,
+        screenSpecs: resolvedSpecs,
+        deliverableSpec: resolvedSpecs,
+        description: formData.description || '',
+        projectTitle: proj ? proj.title : 'Studio Project',
+        assigneeId: assigneeId,
+        assigneeName: member ? member.name : 'Artist',
+        assigneeRole: member ? member.roleTitle : 'Visualizer',
+        departmentId: member ? member.departmentId : 'dept-3d'
+      });
     });
+
     onClose();
   };
 
@@ -611,7 +932,7 @@ export function NewTaskModal({ isOpen, onClose }) {
             </div>
             <div>
               <h2 className="text-base font-extrabold dark:text-white text-slate-900">Assign Studio Task</h2>
-              <p className="text-xs text-slate-400">Allocate visualizer, specify canvas specs, and outline task details</p>
+              <p className="text-xs text-slate-400">Allocate visualizer(s), specify canvas specs, and outline task details</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer">
@@ -632,42 +953,87 @@ export function NewTaskModal({ isOpen, onClose }) {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="font-bold text-slate-600 dark:text-slate-300">Studio Project *</label>
-              <select
-                required
-                value={formData.projectId || data.projects[0]?.id || ''}
-                onChange={e => {
-                  const newProjId = e.target.value;
-                  const p = data.projects.find(proj => proj.id === newProjId);
-                  setFormData(prev => ({
-                    ...prev,
-                    projectId: newProjId,
-                    screenSpecs: p?.screenSpecs || prev.screenSpecs,
-                    deliverableSpec: p?.screenSpecs || prev.deliverableSpec
-                  }));
-                }}
-                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
-              >
-                {data.projects.map(p => (
-                  <option key={p.id} value={p.id}>{p.code}: {p.title}</option>
-                ))}
-              </select>
+          <div className="space-y-1">
+            <label className="font-bold text-slate-600 dark:text-slate-300">Studio Project *</label>
+            <select
+              required
+              value={formData.projectId || data.projects[0]?.id || ''}
+              onChange={e => {
+                const newProjId = e.target.value;
+                const p = data.projects.find(proj => proj.id === newProjId);
+                setFormData(prev => ({
+                  ...prev,
+                  projectId: newProjId,
+                  screenSpecs: p?.screenSpecs || prev.screenSpecs,
+                  deliverableSpec: p?.screenSpecs || prev.deliverableSpec
+                }));
+              }}
+              className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
+            >
+              {data.projects.map(p => (
+                <option key={p.id} value={p.id}>{p.code}: {p.title}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Multi-Visualizer Assignment */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-slate-600 dark:text-slate-300">
+                Assign Visualizer(s) *
+              </label>
+              <div className="flex items-center gap-1.5 text-[10px]">
+                <span className="font-bold text-slate-400">
+                  {selectedAssigneeIds.length} visualizer{selectedAssigneeIds.length === 1 ? '' : 's'} selected
+                </span>
+                <span className="text-slate-400">•</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedAssigneeIds(availableVisualizers.map(m => m.id))}
+                  className="text-[#E5252A] hover:underline font-bold cursor-pointer"
+                >
+                  Select All
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="font-bold text-slate-600 dark:text-slate-300">Assignee (Visualizer) *</label>
-              <select
-                value={formData.assigneeId}
-                onChange={e => setFormData({ ...formData, assigneeId: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
-              >
-                {data.members.filter(m => m.departmentId !== 'dept-bd').map(m => (
-                  <option key={m.id} value={m.id}>{m.name} ({m.departmentName})</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200">
+              {availableVisualizers.map(m => {
+                const isChecked = selectedAssigneeIds.includes(m.id);
+                return (
+                  <div
+                    key={m.id}
+                    onClick={() => toggleAssignee(m.id)}
+                    className={`flex items-center gap-2 p-1.5 rounded-lg border cursor-pointer select-none transition-all ${
+                      isChecked
+                        ? 'border-[#E5252A] bg-[#E5252A]/10 text-slate-900 dark:text-white shadow-xs'
+                        : 'border-transparent hover:bg-slate-200/50 dark:hover:bg-[#161b22] text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {}}
+                      className="accent-[#E5252A] rounded cursor-pointer"
+                    />
+                    <img
+                      src={m.avatar}
+                      alt={m.name}
+                      className="w-5 h-5 rounded-full object-cover border flex-shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] font-bold truncate">{m.name}</div>
+                      <div className="text-[9px] text-slate-400 truncate">{m.departmentName || m.roleTitle}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+            {selectedAssigneeIds.length > 1 && (
+              <p className="text-[10px] text-emerald-500 font-medium">
+                ✓ Distributes this task to {selectedAssigneeIds.length} visualizers. Each receives their own trackable card.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -735,7 +1101,7 @@ export function NewTaskModal({ isOpen, onClose }) {
               type="submit"
               className="px-5 py-2 rounded-xl bg-[#E5252A] hover:bg-[#c91d22] text-white font-bold transition-all shadow-md shadow-red-900/20 cursor-pointer"
             >
-              Assign Task
+              {selectedAssigneeIds.length > 1 ? `Distribute to ${selectedAssigneeIds.length} Visualizers` : 'Assign Task'}
             </button>
           </div>
         </form>

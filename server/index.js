@@ -696,6 +696,17 @@ app.post('/api/tasks', (req, res) => {
     });
   }
 
+  // Auto-link assignee to project assignedMemberIds
+  if (newTask.projectId && newTask.assigneeId) {
+    const proj = db.projects.find(p => p.id === newTask.projectId);
+    if (proj) {
+      if (!proj.assignedMemberIds) proj.assignedMemberIds = [];
+      if (!proj.assignedMemberIds.includes(newTask.assigneeId)) {
+        proj.assignedMemberIds.push(newTask.assigneeId);
+      }
+    }
+  }
+
   saveDatabase(db);
   res.status(201).json(newTask);
 });
@@ -740,6 +751,17 @@ app.put('/api/tasks/:id', (req, res) => {
       isRead: false,
       createdAt: new Date().toISOString()
     });
+  }
+
+  // Auto-link assignee to project assignedMemberIds
+  if (updatedTask.projectId && updatedTask.assigneeId) {
+    const proj = db.projects.find(p => p.id === updatedTask.projectId);
+    if (proj) {
+      if (!proj.assignedMemberIds) proj.assignedMemberIds = [];
+      if (!proj.assignedMemberIds.includes(updatedTask.assigneeId)) {
+        proj.assignedMemberIds.push(updatedTask.assigneeId);
+      }
+    }
   }
 
   saveDatabase(db);
