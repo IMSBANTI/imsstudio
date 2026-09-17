@@ -325,9 +325,9 @@ export function HandoverToStudioModal({ isOpen, onClose, brief }) {
                 onChange={e => setFormData({ ...formData, leadVisualizerId: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
               >
-                {data.members.filter(m => m.departmentId !== 'dept-bd').map(m => (
-                  <option key={m.id} value={m.id}>{m.name} ({m.roleTitle})</option>
-                ))}
+                {getProductionVisualizers(data.members, data.departments).map(m => (
+                <option key={m.id} value={m.id}>{m.name} ({m.roleTitle})</option>
+              ))}
               </select>
             </div>
 
@@ -386,9 +386,22 @@ export function HandoverToStudioModal({ isOpen, onClose, brief }) {
   );
 }
 
+// Helper to filter only 2D and 3D production team members who execute studio tasks (excludes BD and Executive Directors)
+export const getProductionVisualizers = (members = [], departments = []) => {
+  return members.filter(m => {
+    if (m.roleType === 'admin' || m.roleType === 'bd') return false;
+    const dept = departments.find(d => d.id === m.departmentId);
+    const deptName = (m.departmentName || dept?.name || '').toLowerCase();
+    const deptCode = (dept?.code || '').toLowerCase();
+    const deptId = (m.departmentId || '').toLowerCase();
+    return deptId === 'dept-2d' || deptId === 'dept-3d' || /2d|3d/.test(deptName) || /2d|3d/.test(deptCode);
+  });
+};
+
 // --- 3. New Studio Project Modal ---
 export function NewProjectModal({ isOpen, onClose }) {
   const { data, addProject } = useStudio();
+  const productionMembers = getProductionVisualizers(data.members, data.departments);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -404,7 +417,7 @@ export function NewProjectModal({ isOpen, onClose }) {
     mediaServerFormat: 'ProRes 4444',
     budgetHours: 100,
     budgetAmountBDT: 200000,
-    leadVisualizerId: data.members[0]?.id || '',
+    leadVisualizerId: productionMembers[0]?.id || data.members[0]?.id || '',
     description: ''
   });
   const [assignedMemberIds, setAssignedMemberIds] = useState([]);
@@ -533,7 +546,7 @@ export function NewProjectModal({ isOpen, onClose }) {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setAssignedMemberIds(data.members.map(m => m.id))}
+                  onClick={() => setAssignedMemberIds(productionMembers.map(m => m.id))}
                   className="text-[10px] text-[#E5252A] hover:underline font-bold cursor-pointer"
                 >
                   Select All
@@ -549,7 +562,7 @@ export function NewProjectModal({ isOpen, onClose }) {
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200">
-              {data.members.map(m => {
+              {productionMembers.map(m => {
                 const isSelected = assignedMemberIds.includes(m.id);
                 return (
                   <div
@@ -611,6 +624,7 @@ export function NewProjectModal({ isOpen, onClose }) {
 // --- 3.5 Edit Project Modal ---
 export function EditProjectModal({ isOpen, onClose, project }) {
   const { data, updateProject } = useStudio();
+  const productionMembers = getProductionVisualizers(data.members, data.departments);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -767,7 +781,7 @@ export function EditProjectModal({ isOpen, onClose, project }) {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setAssignedMemberIds(data.members.map(m => m.id))}
+                  onClick={() => setAssignedMemberIds(productionMembers.map(m => m.id))}
                   className="text-[10px] text-[#E5252A] hover:underline font-bold cursor-pointer"
                 >
                   Select All
@@ -783,7 +797,7 @@ export function EditProjectModal({ isOpen, onClose, project }) {
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200">
-              {data.members.map(m => {
+              {productionMembers.map(m => {
                 const isSelected = assignedMemberIds.includes(m.id);
                 return (
                   <div
@@ -860,7 +874,7 @@ export function NewTaskModal({ isOpen, onClose }) {
     revisionNotes: ''
   });
 
-  const availableVisualizers = data.members.filter(m => m.departmentId !== 'dept-bd');
+  const availableVisualizers = getProductionVisualizers(data.members, data.departments);
   const [selectedAssigneeIds, setSelectedAssigneeIds] = useState([]);
 
   React.useEffect(() => {
@@ -1226,8 +1240,8 @@ export function EditTaskModal({ isOpen, onClose, task }) {
                 onChange={e => setFormData({ ...formData, assigneeId: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-white text-slate-900"
               >
-                {data.members.filter(m => m.departmentId !== 'dept-bd').map(m => (
-                  <option key={m.id} value={m.id}>{m.name} ({m.departmentName})</option>
+                {getProductionVisualizers(data.members, data.departments).map(m => (
+                  <option key={m.id} value={m.id}>{m.name} ({m.departmentName || m.roleTitle})</option>
                 ))}
               </select>
             </div>

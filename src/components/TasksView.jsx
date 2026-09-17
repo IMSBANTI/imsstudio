@@ -21,7 +21,7 @@ import {
   Trash2,
   Pencil
 } from 'lucide-react';
-import { EditTaskModal } from './Modals';
+import { EditTaskModal, getProductionVisualizers } from './Modals';
 
 export function TasksView({ onOpenNewTask }) {
   const { data, updateTask, deleteTask, startTimer, pauseTimer, timerState, currentUser, isManager, isAdmin } = useStudio();
@@ -147,8 +147,8 @@ export function TasksView({ onOpenNewTask }) {
                 className="w-full px-3 py-2 rounded-xl text-xs dark:bg-[#0d1117] bg-slate-50 border dark:border-[#30363d] border-slate-200 dark:text-slate-300 text-slate-900"
               >
                 <option value="All">All Visualizers</option>
-                {data.members.filter(m => m.departmentId !== 'dept-bd').map(m => (
-                  <option key={m.id} value={m.id}>{m.name} ({m.departmentName})</option>
+                {getProductionVisualizers(data.members, data.departments).map(m => (
+                  <option key={m.id} value={m.id}>{m.name} ({m.departmentName || m.roleTitle})</option>
                 ))}
               </select>
             </div>
